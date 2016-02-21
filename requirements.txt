@@ -1,2 +1,4 @@
 btctxstore >= 4.6.1
 apigen >= 1.4.1
+storjkademlia >= 0.7.2
+crochet >= 1.4.0

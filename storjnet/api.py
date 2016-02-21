@@ -1,26 +1,70 @@
 import apigen
+import binascii
+import btctxstore
+import crochet
+import storjkademlia
+from collections import defaultdict
+from . protocol import Protocol
+from storjkademlia.storage import ForgetfulStorage
+from pycoin.encoding import a2b_hashed_base58
+from storjkademlia.node import Node
 from . version import __version__  # NOQA
 
 
 class Storjnet(apigen.Definition):
 
-    def __init__(self, key, networkid=None, port=None, bootstrap=None,
+    def __init__(self, key, networkid, port, bootstrap, call_timeout=120,
                  limit_send_sec=None, limit_receive_sec=None,
                  limit_send_month=None, limit_receive_month=None,
                  quiet=False, debug=False, verbose=False, noisy=False):
-        pass
+
+        self._log = None  # TODO get logger
+        self._call_timeout = call_timeout
+        self._setup_node(key)
+        self._setup_protocol()
+        self._setup_kademlia(bootstrap, port)
+        # TODO setup quasar
+        # TODO setup messaging
+        # TODO setup streams
+        # TODO wait until overlay stable
+
+    def _setup_node(self, key):
+        self._btctxstore = btctxstore.BtcTxStore()
+        is_hwif = self._btctxstore.validate_wallet(key)
+        self._key = self._btctxstore.get_key(key) if is_hwif else key
+        address = self._btctxstore.get_address(self._key)
+        self._nodeid = a2b_hashed_base58(address)[1:]
+
+    def _setup_protocol(self):
+        storage = ForgetfulStorage()
+        self._protocol = Protocol(Node(self._nodeid), storage, ksize=20,
+                                  max_messages=1024)
+        # TODO set rpc logger
+
+    def _setup_kademlia(self, bootstrap, port):
+        self._kademlia = storjkademlia.network.Server(id=self.nodeid,
+                                                      protocol=self._protocol)
+        self._kademlia.bootstrap(bootstrap)
+        self._kademlia.listen(port)
+        # TODO set kademlia logger
 
     @apigen.command()
     def dht_put(self, key, value):
         """Store key/value pair in DHT."""
-        raise NotImplementedError()  # TODO implement
-        # TODO return bool
+
+        @crochet.wait_for(timeout=self._call_timeout)
+        def func():
+            return self._kademlia.set(key, value)
+        return func()
 
     @apigen.command()
     def dht_get(self, key):
         """Get value for given key in DHT."""
-        raise NotImplementedError()  # TODO implement
-        # TODO return value
+
+        @crochet.wait_for(timeout=self._call_timeout)
+        def func():
+            return self._kademlia.get(key)
+        return func()
 
     @apigen.command()
     def pubsub_publish(self, topic, event):
@@ -58,8 +102,11 @@ class Storjnet(apigen.Definition):
     @apigen.command()
     def message_list(self):
         """Messages received since last called (in order)."""
-        raise NotImplementedError()  # TODO implement
-        # TODO return {nodeid: [message]}
+        results = defaultdict(lambda: [])
+        while not self._protocol.messages.empty():
+            nodeid, message = self._protocol.messages.get()
+            results[binascii.hexlify(nodeid)].append(message)
+        return results
 
     @apigen.command()
     def stream_list(self):
@@ -88,6 +135,12 @@ class Storjnet(apigen.Definition):
     def stream_write(self, streamid, data):
         """Write to a datastream with a node."""
         raise NotImplementedError()  # TODO implement
+
+    def stop(self):
+        raise NotImplementedError()  # TODO implement
+
+    def on_shutdown(self):
+        self.stop()
 
 
 if __name__ == "__main__":
