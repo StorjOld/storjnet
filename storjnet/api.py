@@ -4,7 +4,10 @@ from . version import __version__  # NOQA
 
 class Storjnet(apigen.Definition):
 
-    def __init__(self, quiet=False, debug=False, verbose=False, noisy=False):
+    def __init__(self, key, networkid=None, port=None, bootstrap=None,
+                 limit_send_sec=None, limit_receive_sec=None,
+                 limit_send_month=None, limit_receive_month=None,
+                 quiet=False, debug=False, verbose=False, noisy=False):
         pass
 
     @apigen.command()
