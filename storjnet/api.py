@@ -14,7 +14,7 @@ from . version import __version__  # NOQA
 
 class StorjNet(apigen.Definition):
 
-    def __init__(self, key=None, port=None, bootstrap=None,
+    def __init__(self, nodekey=None, port=None, bootstrap=None,
                  networkid="mainnet", call_timeout=120,
                  limit_send_sec=None, limit_receive_sec=None,
                  limit_send_month=None, limit_receive_month=None,
@@ -22,7 +22,7 @@ class StorjNet(apigen.Definition):
 
         self._log = None  # TODO get logger
         self._call_timeout = call_timeout
-        self._setup_node(key)
+        self._setup_node(nodekey)
         self._setup_protocol()
         self._setup_kademlia(bootstrap, port)
         # TODO setup quasar
@@ -30,11 +30,11 @@ class StorjNet(apigen.Definition):
         # TODO setup streams
         # TODO wait until overlay stable
 
-    def _setup_node(self, key):
+    def _setup_node(self, nodekey):
         self._btctxstore = btctxstore.BtcTxStore()
-        key = key or self._btctxstore.create_key()
-        is_hwif = self._btctxstore.validate_wallet(key)
-        self._key = self._btctxstore.get_key(key) if is_hwif else key
+        nodekey = nodekey or self._btctxstore.create_key()
+        is_hwif = self._btctxstore.validate_wallet(nodekey)
+        self._key = self._btctxstore.get_key(nodekey) if is_hwif else nodekey
         address = self._btctxstore.get_address(self._key)
         self._nodeid = a2b_hashed_base58(address)[1:]
 
@@ -109,7 +109,7 @@ class StorjNet(apigen.Definition):
         while not self._protocol.messages.empty():
             nodeid, message = self._protocol.messages.get()
             results[binascii.hexlify(nodeid)].append(message)
-        return results
+        return dict(results)
 
     @apigen.command()
     def stream_list(self):
@@ -139,11 +139,11 @@ class StorjNet(apigen.Definition):
         """Write to a datastream with a node."""
         raise NotImplementedError()  # TODO implement
 
-#    def stop(self):
-#        raise NotImplementedError()  # TODO implement
-#
-#    def on_shutdown(self):
-#        self.stop()
+    def stop(self):
+        pass  # no extra threads/services to stop ... yet
+
+    def on_shutdown(self):
+        self.stop()
 
 
 if __name__ == "__main__":
