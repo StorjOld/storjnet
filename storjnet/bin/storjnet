@@ -1,0 +1,22 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+
+# always use faster native code
+import os
+os.environ["PYCOIN_NATIVE"] = "openssl"
+
+
+import signal  # NOQA
+import apigen  # NOQA
+import storjnet  # NOQA
+from crochet import setup  # NOQA
+
+
+# start twisted via crochet and remove twisted handler
+setup()
+signal.signal(signal.SIGINT, signal.default_int_handler)
+
+
+if __name__ == "__main__":
+    apigen.run(storjnet.api.StorjNet)

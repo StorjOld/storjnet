@@ -12,7 +12,7 @@ from pyp2p.lib import get_unused_port
 from . version import __version__  # NOQA
 
 
-class Storjnet(apigen.Definition):
+class StorjNet(apigen.Definition):
 
     def __init__(self, key=None, port=None, bootstrap=None,
                  networkid="mainnet", call_timeout=120,
@@ -147,4 +147,4 @@ class Storjnet(apigen.Definition):
 
 
 if __name__ == "__main__":
-    apigen.run(Storjnet)
+    apigen.run(StorjNet)
