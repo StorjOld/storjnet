@@ -2,18 +2,20 @@ import apigen
 import binascii
 import btctxstore
 import crochet
-import storjkademlia
 from collections import defaultdict
 from . protocol import Protocol
-from storjkademlia.storage import ForgetfulStorage
 from pycoin.encoding import a2b_hashed_base58
+from storjkademlia.storage import ForgetfulStorage
 from storjkademlia.node import Node
+from storjkademlia.network import Server
+from pyp2p.lib import get_unused_port
 from . version import __version__  # NOQA
 
 
 class Storjnet(apigen.Definition):
 
-    def __init__(self, key, networkid, port, bootstrap, call_timeout=120,
+    def __init__(self, key=None, port=None, bootstrap=None,
+                 networkid="mainnet", call_timeout=120,
                  limit_send_sec=None, limit_receive_sec=None,
                  limit_send_month=None, limit_receive_month=None,
                  quiet=False, debug=False, verbose=False, noisy=False):
@@ -30,6 +32,7 @@ class Storjnet(apigen.Definition):
 
     def _setup_node(self, key):
         self._btctxstore = btctxstore.BtcTxStore()
+        key = key or self._btctxstore.create_key()
         is_hwif = self._btctxstore.validate_wallet(key)
         self._key = self._btctxstore.get_key(key) if is_hwif else key
         address = self._btctxstore.get_address(self._key)
@@ -42,10 +45,10 @@ class Storjnet(apigen.Definition):
         # TODO set rpc logger
 
     def _setup_kademlia(self, bootstrap, port):
-        self._kademlia = storjkademlia.network.Server(id=self.nodeid,
-                                                      protocol=self._protocol)
-        self._kademlia.bootstrap(bootstrap)
-        self._kademlia.listen(port)
+        self._port = port or get_unused_port()
+        self._kademlia = Server(id=self._nodeid, protocol=self._protocol)
+        self._kademlia.bootstrap(bootstrap or [])
+        self._kademlia.listen(self._port)
         # TODO set kademlia logger
 
     @apigen.command()
@@ -136,11 +139,11 @@ class Storjnet(apigen.Definition):
         """Write to a datastream with a node."""
         raise NotImplementedError()  # TODO implement
 
-    def stop(self):
-        raise NotImplementedError()  # TODO implement
-
-    def on_shutdown(self):
-        self.stop()
+#    def stop(self):
+#        raise NotImplementedError()  # TODO implement
+#
+#    def on_shutdown(self):
+#        self.stop()
 
 
 if __name__ == "__main__":
