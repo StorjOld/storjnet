@@ -14,7 +14,7 @@ echo $COVERAGE
 $PEP8 storjnet
 
 # start server
-$COVERAGE run --source=storjnet -m storjnet.api startserver --hostname=127.0.0.1 --port=7000 & 
+$COVERAGE run --source=storjnet -m storjnet.api startserver --hostname=127.0.0.1 --port=5000 & 
 PID=$!
 
 # run compatibility tests

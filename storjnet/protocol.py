@@ -12,6 +12,10 @@ class Protocol(KademliaProtocol):
         self.messages = Queue(maxsize=kwargs.pop("max_messages"))
         KademliaProtocol.__init__(self, *args, **kwargs)
 
+    def get_neighbors(self):
+        return self.router.findNeighbors(self.router.node,
+                                         exclude=self.router.node)
+
     def rpc_quasar_filters(self, sender, nodeid):
         source = Node(nodeid, sender[0], sender[1])
         self.welcomeIfNewNode(source)

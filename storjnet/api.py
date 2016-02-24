@@ -1,7 +1,10 @@
 import apigen
+import random
 import binascii
 import btctxstore
 import crochet
+from twisted.internet import defer
+from storjkademlia.crawling import NodeSpiderCrawl
 from collections import defaultdict
 from . protocol import Protocol
 from pycoin.encoding import a2b_hashed_base58
@@ -14,7 +17,7 @@ from . version import __version__  # NOQA
 
 class StorjNet(apigen.Definition):
 
-    def __init__(self, nodekey=None, port=None, bootstrap=None,
+    def __init__(self, node_key=None, node_port=None, bootstrap=None,
                  networkid="mainnet", call_timeout=120,
                  limit_send_sec=None, limit_receive_sec=None,
                  limit_send_month=None, limit_receive_month=None,
@@ -22,19 +25,19 @@ class StorjNet(apigen.Definition):
 
         self._log = None  # TODO get logger
         self._call_timeout = call_timeout
-        self._setup_node(nodekey)
+        self._setup_node(node_key)
         self._setup_protocol()
-        self._setup_kademlia(bootstrap, port)
+        self._setup_kademlia(bootstrap, node_port)
         # TODO setup quasar
         # TODO setup messaging
         # TODO setup streams
         # TODO wait until overlay stable
 
-    def _setup_node(self, nodekey):
+    def _setup_node(self, node_key):
         self._btctxstore = btctxstore.BtcTxStore()
-        nodekey = nodekey or self._btctxstore.create_key()
-        is_hwif = self._btctxstore.validate_wallet(nodekey)
-        self._key = self._btctxstore.get_key(nodekey) if is_hwif else nodekey
+        node_key = node_key or self._btctxstore.create_key()
+        is_hwif = self._btctxstore.validate_wallet(node_key)
+        self._key = self._btctxstore.get_key(node_key) if is_hwif else node_key
         address = self._btctxstore.get_address(self._key)
         self._nodeid = a2b_hashed_base58(address)[1:]
 
@@ -44,8 +47,8 @@ class StorjNet(apigen.Definition):
                                   max_messages=1024)
         # TODO set rpc logger
 
-    def _setup_kademlia(self, bootstrap, port):
-        self._port = port or get_unused_port()
+    def _setup_kademlia(self, bootstrap, node_port):
+        self._port = node_port or get_unused_port()
         self._kademlia = Server(id=self._nodeid, protocol=self._protocol)
         self._kademlia.bootstrap(bootstrap or [])
         self._kademlia.listen(self._port)
@@ -68,6 +71,56 @@ class StorjNet(apigen.Definition):
         def func():
             return self._kademlia.get(key)
         return func()
+
+    def dht_find_async(self, nodeid):
+        nodeid = binascii.unhexlify(nodeid)
+
+        # stun if own id given
+        if nodeid == self._nodeid:
+            neighbors = self._protocol.get_neighbors()
+            return self._protocol.stun(random.choice(neighbors))
+
+        # crawl to find nearest to target nodeid
+        node = Node(nodeid)
+        nearest = self._protocol.router.findNeighbors(node)
+        if len(nearest) == 0:
+            return defer.succeed(None)
+        spider = NodeSpiderCrawl(self._protocol, node, nearest,
+                                 self._kademlia.ksize, self._kademlia.alpha)
+        d = spider.find()
+
+        # filter requested node
+        def func(nodes):
+            for node in nodes:
+                if node.id == nodeid:
+                    return [node.ip, node.port]
+            return None
+        d.addCallback(func)
+        return d
+
+    @apigen.command()
+    def dht_find(self, nodeid):
+        """Get [ip, port] if online, call with own id to stun."""
+
+        @crochet.wait_for(timeout=self._call_timeout)
+        def func():
+            return self.dht_find_async(nodeid)
+        return func()
+
+    @apigen.command()
+    def dht_id(self):
+        """Get the id of this node."""
+        return binascii.hexlify(self._nodeid)
+
+    @apigen.command()
+    def dht_peers(self):
+        """List neighbors."""
+        neighbors = []
+        for neighbor in self._protocol.get_neighbors():
+            neighbors.append([
+                binascii.hexlify(neighbor.id), neighbor.ip, neighbor.port
+            ])
+        return neighbors
 
     @apigen.command()
     def pubsub_publish(self, topic, event):
