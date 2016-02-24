@@ -11,6 +11,7 @@ class Protocol(KademliaProtocol):
     def __init__(self, *args, **kwargs):
         self.messages = Queue(maxsize=kwargs.pop("max_messages"))
         KademliaProtocol.__init__(self, *args, **kwargs)
+        self.noisy = False
 
     def get_neighbors(self):
         return self.router.findNeighbors(self.router.node,

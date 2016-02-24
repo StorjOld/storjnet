@@ -1,5 +1,6 @@
 btctxstore >= 4.6.1
-apigen >= 1.4.4
+apigen >= 1.5.0
 storjkademlia >= 0.7.2
 pyp2p >= 0.7.5
 crochet >= 1.4.0
+psutil

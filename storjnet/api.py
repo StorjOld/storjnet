@@ -31,7 +31,6 @@ class StorjNet(apigen.Definition):
         # TODO setup quasar
         # TODO setup messaging
         # TODO setup streams
-        # TODO wait until overlay stable
 
     def _setup_node(self, node_key):
         self._btctxstore = btctxstore.BtcTxStore()
@@ -48,6 +47,11 @@ class StorjNet(apigen.Definition):
         # TODO set rpc logger
 
     def _setup_kademlia(self, bootstrap, node_port):
+
+        # ensure transport address is a tuple
+        if bootstrap is not None:
+            bootstrap = [(addr[0], addr[1]) for addr in bootstrap]
+
         self._port = node_port or get_unused_port()
         self._kademlia = Server(id=self._nodeid, protocol=self._protocol)
         self._kademlia.bootstrap(bootstrap or [])
@@ -78,7 +82,8 @@ class StorjNet(apigen.Definition):
         # stun if own id given
         if nodeid == self._nodeid:
             neighbors = self._protocol.get_neighbors()
-            return self._protocol.stun(random.choice(neighbors))
+            neighbor = random.choice(neighbors)
+            return self._protocol.stun((neighbor.ip, neighbor.port))
 
         # crawl to find nearest to target nodeid
         node = Node(nodeid)
