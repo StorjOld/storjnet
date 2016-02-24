@@ -25,7 +25,7 @@ signal.signal(signal.SIGINT, signal.default_int_handler)
 # log.startLogging(sys.stdout)
 
 
-SWARMSIZE = 5
+SWARMSIZE = 50
 START_NET_PORT = 6000
 START_USER_PORT = 5000
 
