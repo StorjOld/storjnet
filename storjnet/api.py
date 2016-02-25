@@ -58,14 +58,22 @@ class StorjNet(apigen.Definition):
         self._kademlia.listen(self._port)
         # TODO set kademlia logger
 
+    def dht_put_async(self, key, value):
+        """Store key/value pair in DHT."""
+        return self._kademlia.set(key, value)
+
     @apigen.command()
     def dht_put(self, key, value):
         """Store key/value pair in DHT."""
 
         @crochet.wait_for(timeout=self._call_timeout)
         def func():
-            return self._kademlia.set(key, value)
+            return self.put_async(key, value)
         return func()
+
+    def dht_get_async(self, key):
+        """Get value for given key in DHT."""
+        return self._kademlia.get(key)
 
     @apigen.command()
     def dht_get(self, key):
@@ -73,7 +81,7 @@ class StorjNet(apigen.Definition):
 
         @crochet.wait_for(timeout=self._call_timeout)
         def func():
-            return self._kademlia.get(key)
+            return self.dht_get_async(key)
         return func()
 
     def dht_find_async(self, nodeid):
@@ -154,11 +162,27 @@ class StorjNet(apigen.Definition):
         raise NotImplementedError()  # TODO implement
         # TODO return events
 
+    def message_send_async(self, nodeid, message):
+        """Send a direct message to a known node."""
+        d = self.dht_find_async(nodeid)
+
+        def func(result):
+            if result is None:
+                return False
+            ip, port = result
+            node = Node(nodeid, ip, port)
+            return self._protocol.callMessageNotify(node, message)
+        d.addCallback(func)
+        return d
+
     @apigen.command()
     def message_send(self, nodeid, message):
         """Send a direct message to a known node."""
-        raise NotImplementedError()  # TODO implement
-        # TODO return bool
+
+        @crochet.wait_for(timeout=self._call_timeout)
+        def func():
+            return self.message_send_async(nodeid, message)
+        return func()
 
     @apigen.command()
     def message_list(self):
