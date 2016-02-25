@@ -91,7 +91,14 @@ class StorjNet(apigen.Definition):
         """Stun random neighbor to see own wan ip/port."""
         # TODO cache result
         hexid, ip, port = random.choice(self.dht_peers())
-        return self._protocol.stun((ip, port))
+        d = self._protocol.stun((ip, port))
+
+        def func(result):
+            if result[0]:
+                return result[1]
+            return None
+        d.addCallback(func)
+        return d
 
     @apigen.command()
     def dht_stun(self):
