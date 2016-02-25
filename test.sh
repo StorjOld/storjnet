@@ -24,5 +24,5 @@ bash -c "source <(curl -s https://raw.githubusercontent.com/Storj/storjspec/mast
 kill -INT $PID
 
 # report coverage
-sleep 1
+sleep 10
 $COVERAGE report # --fail-under=95
