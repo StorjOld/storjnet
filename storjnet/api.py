@@ -84,14 +84,29 @@ class StorjNet(apigen.Definition):
             return self.dht_get_async(key)
         return func()
 
-    def dht_find_async(self, nodeid):
-        nodeid = binascii.unhexlify(nodeid)
+    def dht_stun_async(self):
+        """Stun random neighbor to see own wan ip/port."""
+        # TODO cache result
+        hexid, ip, port = random.choice(self.dht_peers())
+        return self._protocol.stun((ip, port))
+
+    @apigen.command()
+    def dht_stun(self):
+        """Stun random neighbor to see own wan ip/port."""
+
+        @crochet.wait_for(timeout=self._call_timeout)
+        def func():
+            return self.dht_stun_async()
+        return func()
+
+    def dht_find_async(self, hexnodeid):
+        """Get [ip, port] if online, call with own id to stun."""
+        # TODO cache results
+        nodeid = binascii.unhexlify(hexnodeid)
 
         # stun if own id given
         if nodeid == self._nodeid:
-            neighbors = self._protocol.get_neighbors()
-            neighbor = random.choice(neighbors)
-            return self._protocol.stun((neighbor.ip, neighbor.port))
+            return self.dht_stun_async()
 
         # crawl to find nearest to target nodeid
         node = Node(nodeid)
@@ -112,12 +127,12 @@ class StorjNet(apigen.Definition):
         return d
 
     @apigen.command()
-    def dht_find(self, nodeid):
+    def dht_find(self, hexnodeid):
         """Get [ip, port] if online, call with own id to stun."""
 
         @crochet.wait_for(timeout=self._call_timeout)
         def func():
-            return self.dht_find_async(nodeid)
+            return self.dht_find_async(hexnodeid)
         return func()
 
     @apigen.command()
@@ -162,26 +177,26 @@ class StorjNet(apigen.Definition):
         raise NotImplementedError()  # TODO implement
         # TODO return events
 
-    def message_send_async(self, nodeid, message):
+    def message_send_async(self, hexnodeid, message):
         """Send a direct message to a known node."""
-        d = self.dht_find_async(nodeid)
+        d = self.dht_find_async(hexnodeid)
 
         def func(result):
             if result is None:
                 return False
             ip, port = result
-            node = Node(nodeid, ip, port)
+            node = Node(binascii.unhexlify(hexnodeid), ip, port)
             return self._protocol.callMessageNotify(node, message)
         d.addCallback(func)
         return d
 
     @apigen.command()
-    def message_send(self, nodeid, message):
+    def message_send(self, hexnodeid, message):
         """Send a direct message to a known node."""
 
         @crochet.wait_for(timeout=self._call_timeout)
         def func():
-            return self.message_send_async(nodeid, message)
+            return self.message_send_async(hexnodeid, message)
         return func()
 
     @apigen.command()
@@ -200,7 +215,7 @@ class StorjNet(apigen.Definition):
         # TODO return {streamid: buf_len}
 
     @apigen.command()
-    def stream_open(self, nodeid):
+    def stream_open(self, hexnodeid):
         """Open a datastream with a node."""
         raise NotImplementedError()  # TODO implement
         # TODO return streamid
