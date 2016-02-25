@@ -25,7 +25,7 @@ signal.signal(signal.SIGINT, signal.default_int_handler)
 # log.startLogging(sys.stdout)
 
 
-SWARMSIZE = 50
+SWARMSIZE = 5
 START_NET_PORT = 6000
 START_USER_PORT = 5000
 
@@ -54,9 +54,12 @@ if __name__ == "__main__":
         while True:
             time.sleep(1)
 
-    finally:
+    # expected exit mode
+    except KeyboardInterrupt:
+        pass
 
-        # shutdown swarm
+    # shutdown swarm
+    finally:
         for api, thread in nodes:
             api.stopserver()
             thread.join()

@@ -68,7 +68,7 @@ class StorjNet(apigen.Definition):
 
         @crochet.wait_for(timeout=self._call_timeout)
         def func():
-            return self.put_async(key, value)
+            return self.dht_put_async(key, value)
         return func()
 
     def dht_get_async(self, key):
