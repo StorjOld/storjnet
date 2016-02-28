@@ -31,6 +31,7 @@ class StorjNet(apigen.Definition):
         self._setup_node(node_key)
         self._setup_protocol(noisy, queue_limit)
         self._setup_kademlia(bootstrap, node_port)
+        self._setup_quasar(queue_limit, history_limit)
         # TODO setup streams
 
     def _setup_node(self, node_key):
@@ -169,7 +170,7 @@ class StorjNet(apigen.Definition):
     def pubsub_publish(self, topic, event):
         """Publish an event on the network for a given topic."""
         # TODO sanatize input
-        # TODO use envelope { sender, body, signature } ?
+        # TODO use envelope { timestamp, sender, body, signature } ?
         self._quasar.publish(topic, event)
 
     @apigen.command()
