@@ -84,7 +84,6 @@ class Quasar(object):
 
     def _rebuild(self):
         """Algorithm 1 from the quasar paper."""
-        t = self._protocol.quasar_freshness
         self._filters = abf_empty()
 
         # create home attenuated bloom filter from own subscriptions
@@ -93,7 +92,7 @@ class Quasar(object):
 
         # join peer filters
         for peer in self._protocol.get_neighbors():
-            if self._peers[peer.id]["timestamp"] < time.time() - t:
+            if self._peers[peer.id]["timestamp"] < time.time() - FRESHNESS:
                 continue  # ignore stale peer filters
             peer_abf = self._peers[peer.id]["filters"]
             for i in range(1, DEPTH):
