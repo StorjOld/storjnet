@@ -3,5 +3,6 @@ apigen >= 1.5.0
 storjkademlia >= 0.7.2
 pyp2p >= 0.7.5
 crochet >= 1.4.0
-pybloom == 1.1
+cython >= 0.23.4
+pybloof >= 0.7.1
 psutil

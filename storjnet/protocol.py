@@ -71,9 +71,9 @@ class Protocol(KademliaProtocol):
         # TODO implement
         return 0  # TODO return bytes written
 
-    def callQuasarUpdate(self, nodeToAsk, hexfilters):
+    def callQuasarUpdate(self, nodeToAsk, b64_filters):
         address = (nodeToAsk.ip, nodeToAsk.port)
-        d = self.quasar_update(address, self.sourceNode.id, hexfilters)
+        d = self.quasar_update(address, self.sourceNode.id, b64_filters)
         d.addCallback(self.handleCallResponse, nodeToAsk)
         d.addErrback(self.onError)
         return d
