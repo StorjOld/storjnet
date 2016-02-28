@@ -4,7 +4,6 @@ except ImportError:
     from queue import Queue, Full  # py3
 from storjkademlia.node import Node
 from storjkademlia.protocol import KademliaProtocol
-from . quasar import Quasar
 
 
 class Protocol(KademliaProtocol):
@@ -13,15 +12,13 @@ class Protocol(KademliaProtocol):
 
         # pop storjnet protocol args
         self.noisy = kwargs.pop("noisy", False)
-        self.max_queue_size = kwargs.pop("max_queue_size", 1024)
-        self.quasar_freshness = kwargs.pop("quasar_freshness", 60)
+        queue_limit = kwargs.pop("queue_limit", 8192)
 
         # cant use super due to introspection?
         KademliaProtocol.__init__(self, *args, **kwargs)
 
-        # messages setup
-        self.messages = Queue(maxsize=self.max_queue_size)
-        self.quasar = Quasar(self)
+        self.messages = Queue(maxsize=queue_limit)
+        self.quasar = None
 
     def get_neighbors(self):
         return self.router.findNeighbors(self.router.node,
@@ -31,13 +28,15 @@ class Protocol(KademliaProtocol):
         # TODO sanatize input
         source = Node(nodeid, sender[0], sender[1])
         self.welcomeIfNewNode(source)
-        return self.quasar.update(source, filters)
+        if self.quasar is not None:
+            return self.quasar.update(source, filters)
 
     def rpc_quasar_notify(self, sender, nodeid, topic, event, publishers, ttl):
         # TODO sanatize input
         source = Node(nodeid, sender[0], sender[1])
         self.welcomeIfNewNode(source)
-        return self.quasar.publish(topic, event, publishers, ttl)
+        if self.quasar is not None:
+            return self.quasar.publish(topic, event, publishers, ttl)
 
     def rpc_message_notify(self, sender, nodeid, message):
         # TODO sanatize input

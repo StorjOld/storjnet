@@ -27,8 +27,9 @@ FRESHNESS = 60
 
 class Quasar(object):
 
-    def __init__(self, protocol):
+    def __init__(self, protocol, queue_limit=8192, history_limit=65536):
         self._protocol = protocol
+        self._protocol.quasar = self
         self._subscriptions = set()
         self._filters = self._empty_filters()
         self._peers = defaultdict(
@@ -37,9 +38,9 @@ class Quasar(object):
                 "filters": self._empty_filters(),
             }
         )
-        self._event_history = []
-        self._event_history_limit = 1024
-        self._events = defaultdict(lambda: Queue(maxsize=self.max_queue_size))
+        self._history = []
+        self._history_limit = history_limit
+        self._events = defaultdict(lambda: Queue(maxsize=queue_limit))
         self._refresh_loop = LoopingCall(self._refresh).start(FRESHNESS / 3)
 
     def subscribe(self, topic):
@@ -50,6 +51,12 @@ class Quasar(object):
 
     def subscriptions(self):
         return self._subscriptions.copy()
+
+    def events(self, topic):
+        results = []
+        while not self._events[topic].empty():
+            results.append(self._events[topic].get())
+        return results
 
     def _refresh(self):
         self._rebuild(self)
@@ -126,15 +133,15 @@ class Quasar(object):
         digest = hashlib.sha256(umsgpack.packb(event)).digest()
 
         # check if event in history
-        duplicate = digest in self._event_history
+        duplicate = digest in self._history
 
         # add to history if needed
         if not duplicate:
-            self._event_history.append(digest)
+            self._history.append(digest)
 
         # cull history
-        while len(self._event_history) > self._event_history_limit:
-            self._event_history.pop(0)  # remove oldest first
+        while len(self._history) > self._history_limit:
+            self._history.pop(0)  # remove oldest first
 
         return duplicate
 

@@ -11,6 +11,7 @@ from storjkademlia.storage import ForgetfulStorage
 from storjkademlia.node import Node
 from storjkademlia.network import Server
 from pyp2p.lib import get_unused_port
+from . quasar import Quasar
 from . protocol import Protocol
 from . version import __version__  # NOQA
 
@@ -21,16 +22,15 @@ class StorjNet(apigen.Definition):
                  networkid="mainnet", call_timeout=120,
                  limit_send_sec=None, limit_receive_sec=None,
                  limit_send_month=None, limit_receive_month=None,
+                 queue_limit=8192, history_limit=65536,
                  quiet=False, debug=False, verbose=False, noisy=False):
         # TODO sanatize input
 
         self._log = None  # TODO get logger
         self._call_timeout = call_timeout
         self._setup_node(node_key)
-        self._setup_protocol()
+        self._setup_protocol(noisy, queue_limit)
         self._setup_kademlia(bootstrap, node_port)
-        # TODO setup quasar
-        # TODO setup messaging
         # TODO setup streams
 
     def _setup_node(self, node_key):
@@ -41,9 +41,10 @@ class StorjNet(apigen.Definition):
         address = self._btctxstore.get_address(self._key)
         self._nodeid = a2b_hashed_base58(address)[1:]
 
-    def _setup_protocol(self):
+    def _setup_protocol(self, noisy, queue_limit):
         storage = ForgetfulStorage()
-        self._protocol = Protocol(Node(self._nodeid), storage)
+        self._protocol = Protocol(Node(self._nodeid), storage, noisy=noisy,
+                                  queue_limit=queue_limit)
         # TODO set rpc logger
 
     def _setup_kademlia(self, bootstrap, node_port):
@@ -57,6 +58,10 @@ class StorjNet(apigen.Definition):
         self._kademlia.bootstrap(bootstrap or [])
         self._kademlia.listen(self._port)
         # TODO set kademlia logger
+
+    def _setup_quasar(self, queue_limit, history_limit):
+        self._quasar = Quasar(self._protocol, queue_limit=queue_limit,
+                              history_limit=history_limit)
 
     def dht_put_async(self, key, value):
         """Store key/value pair in DHT."""
@@ -164,32 +169,31 @@ class StorjNet(apigen.Definition):
     def pubsub_publish(self, topic, event):
         """Publish an event on the network for a given topic."""
         # TODO sanatize input
-        raise NotImplementedError()  # TODO implement
+        # TODO use envelope { sender, body, signature } ?
+        self._quasar.publish(topic, event)
 
     @apigen.command()
     def pubsub_subscribe(self, topic):
         """Subscribe to events for given topic."""
         # TODO sanatize input
-        raise NotImplementedError()  # TODO implement
+        self._quasar.subscribe(topic)
 
     @apigen.command()
     def pubsub_subscriptions(self):
         """List current subscriptions."""
-        raise NotImplementedError()  # TODO implement
-        # TODO return topics
+        return list(self._quasar.subscriptions())
 
     @apigen.command()
     def pubsub_unsubscribe(self, topic):
         """Unsubscribe from events for given topic."""
         # TODO sanatize input
-        raise NotImplementedError()  # TODO implement
+        self._quasar.unsubscribe(topic)
 
     @apigen.command()
     def pubsub_events(self, topic):
         """Events received for topic since last called."""
         # TODO sanatize input
-        raise NotImplementedError()  # TODO implement
-        # TODO return events
+        return self._quasar.events(topic)
 
     def message_send_async(self, hexnodeid, message):
         """Send a direct message to a known node."""
