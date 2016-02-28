@@ -16,7 +16,7 @@ from twisted.internet.task import LoopingCall
 SIZE = 512  # default from quasar paper section 4, first paragraph
 DEPTH = 3  # default from quasar paper section 4, first paragraph
 TTL = 64
-FRESHNESS = 60
+FRESHNESS = 30
 
 
 # TODO Add limited propagations when own filters updated
