@@ -6,12 +6,12 @@ import crochet
 from twisted.internet import defer
 from storjkademlia.crawling import NodeSpiderCrawl
 from collections import defaultdict
-from . protocol import Protocol
 from pycoin.encoding import a2b_hashed_base58
 from storjkademlia.storage import ForgetfulStorage
 from storjkademlia.node import Node
 from storjkademlia.network import Server
 from pyp2p.lib import get_unused_port
+from . protocol import Protocol
 from . version import __version__  # NOQA
 
 
@@ -43,8 +43,7 @@ class StorjNet(apigen.Definition):
 
     def _setup_protocol(self):
         storage = ForgetfulStorage()
-        self._protocol = Protocol(Node(self._nodeid), storage, ksize=20,
-                                  max_messages=1024)
+        self._protocol = Protocol(Node(self._nodeid), storage)
         # TODO set rpc logger
 
     def _setup_kademlia(self, bootstrap, node_port):

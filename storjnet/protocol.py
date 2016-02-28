@@ -4,30 +4,33 @@ except ImportError:
     from queue import Queue, Full  # py3
 from storjkademlia.node import Node
 from storjkademlia.protocol import KademliaProtocol
+from . quasar import Quasar
 
 
 class Protocol(KademliaProtocol):
 
     def __init__(self, *args, **kwargs):
-        self.messages = Queue(maxsize=kwargs.pop("max_messages"))
+
+        # pop storjnet protocol args
+        self.noisy = kwargs.pop("noisy", False)
+        self.max_queue_size = kwargs.pop("max_queue_size", 1024)
+        self.quasar_freshness = kwargs.pop("quasar_freshness", 60)
+
+        # cant use super due to introspection?
         KademliaProtocol.__init__(self, *args, **kwargs)
-        self.noisy = False
+
+        # messages setup
+        self.messages = Queue(maxsize=self.max_queue_size)
+        self.quasar = Quasar(self)
 
     def get_neighbors(self):
         return self.router.findNeighbors(self.router.node,
                                          exclude=self.router.node)
 
-    def rpc_quasar_filters(self, sender, nodeid):
-        source = Node(nodeid, sender[0], sender[1])
-        self.welcomeIfNewNode(source)
-        # TODO implement
-        return []
-
     def rpc_quasar_update(self, sender, nodeid, filters):
         source = Node(nodeid, sender[0], sender[1])
         self.welcomeIfNewNode(source)
-        # TODO implement
-        return True
+        return self.quasar.update(source, filters)
 
     def rpc_quasar_notify(self, sender, nodeid, topic, event, ttl, publishers):
         source = Node(nodeid, sender[0], sender[1])
@@ -64,16 +67,9 @@ class Protocol(KademliaProtocol):
         # TODO implement
         return 0  # TODO return bytes written
 
-    def callQuasarFilters(self, nodeToAsk):
+    def callQuasarUpdate(self, nodeToAsk, hexfilters):
         address = (nodeToAsk.ip, nodeToAsk.port)
-        d = self.quasar_filters(address, self.sourceNode.id)
-        d.addCallback(self.handleCallResponse, nodeToAsk)
-        d.addErrback(self.onError)
-        return d
-
-    def callQuasarUpdate(self, nodeToAsk, filters):
-        address = (nodeToAsk.ip, nodeToAsk.port)
-        d = self.quasar_update(address, self.sourceNode.id, filters)
+        d = self.quasar_update(address, self.sourceNode.id, hexfilters)
         d.addCallback(self.handleCallResponse, nodeToAsk)
         d.addErrback(self.onError)
         return d
