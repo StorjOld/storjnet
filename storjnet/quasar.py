@@ -59,8 +59,8 @@ class Quasar(object):
         return results
 
     def _refresh(self):
-        self._rebuild(self)
-        self._cull(self)
+        self._rebuild()
+        self._cull()
 
     def _empty_filters(self):
         """Create empty attenuated bloom filter."""
