@@ -28,17 +28,19 @@ class Protocol(KademliaProtocol):
                                          exclude=self.router.node)
 
     def rpc_quasar_update(self, sender, nodeid, filters):
+        # TODO sanatize input
         source = Node(nodeid, sender[0], sender[1])
         self.welcomeIfNewNode(source)
         return self.quasar.update(source, filters)
 
-    def rpc_quasar_notify(self, sender, nodeid, topic, event, ttl, publishers):
+    def rpc_quasar_notify(self, sender, nodeid, topic, event, publishers, ttl):
+        # TODO sanatize input
         source = Node(nodeid, sender[0], sender[1])
         self.welcomeIfNewNode(source)
-        # TODO implement
-        return True
+        return self.quasar.publish(topic, event, publishers, ttl)
 
     def rpc_message_notify(self, sender, nodeid, message):
+        # TODO sanatize input
         source = Node(nodeid, sender[0], sender[1])
         self.welcomeIfNewNode(source)
         try:
@@ -50,18 +52,21 @@ class Protocol(KademliaProtocol):
             return False
 
     def rpc_stream_open(self, sender, nodeid):
+        # TODO sanatize input
         source = Node(nodeid, sender[0], sender[1])
         self.welcomeIfNewNode(source)
         # TODO implement
         return None  # TODO return streamid
 
     def rpc_stream_close(self, sender, nodeid, streamid):
+        # TODO sanatize input
         source = Node(nodeid, sender[0], sender[1])
         self.welcomeIfNewNode(source)
         # TODO implement
         return True
 
     def rpc_stream_write(self, sender, nodeid, streamid, data):
+        # TODO sanatize input
         source = Node(nodeid, sender[0], sender[1])
         self.welcomeIfNewNode(source)
         # TODO implement
@@ -74,10 +79,10 @@ class Protocol(KademliaProtocol):
         d.addErrback(self.onError)
         return d
 
-    def callQuasarNotify(self, nodeToAsk, topic, event, ttl, publishers):
+    def callQuasarNotify(self, nodeToAsk, topic, event, publishers, ttl):
         address = (nodeToAsk.ip, nodeToAsk.port)
         d = self.quasar_notify(address, self.sourceNode.id,
-                               topic, event, ttl, publishers)
+                               topic, event, publishers, ttl)
         d.addCallback(self.handleCallResponse, nodeToAsk)
         d.addErrback(self.onError)
         return d
