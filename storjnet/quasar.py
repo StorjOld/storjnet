@@ -23,9 +23,9 @@ SIZE = 512  # default from quasar paper section 4, first paragraph
 DEPTH = 3  # default from quasar paper section 4, first paragraph
 TTL = 64
 
-FRESHNESS = 1800  # time after unupdated peer filters become stale (30min)
+FRESHNESS = 1260  # time after unupdated peer filters become stale (21min)
 REFRESH_TIME = 600  # interval when own filters are propagated to peers (10min)
-EXTRA_PROPAGATIONS = 60  # number of propagation allowed between refreshes
+EXTRA_PROPAGATIONS = 300  # number of propagation allowed between refreshes
 
 
 class Quasar(object):
