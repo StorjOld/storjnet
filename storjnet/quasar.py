@@ -6,36 +6,26 @@ try:
     from Queue import Queue, Full  # py2
 except ImportError:
     from queue import Queue, Full  # py3
-from pybloof import StringBloomFilter
 from collections import defaultdict
 from twisted.internet.task import LoopingCall
+from . import bloom
+
+
+# Implementation of the Quasar Publish/Subscribe system.
+# http://www.cs.toronto.edu/iptps2008/final/70.pdf
+
+
+# TODO make sure all calls are always run in the twisted reactor
+# TODO better to remove extra propagation and just have rapid refreshes?
 
 
 SIZE = 512  # default from quasar paper section 4, first paragraph
 DEPTH = 3  # default from quasar paper section 4, first paragraph
 TTL = 64
-FRESHNESS = 30
 
-
-# TODO Add limited propagations when own filters updated
-#      (by subscribe/unscribe or peer filter update).
-#      Only x updates per refresh cycle to prevent flooding,
-#      this should prevent flooding while remaining responsive.
-
-
-def abf_empty():
-    """Create empty attenuated bloom filter."""
-    return [StringBloomFilter(size=SIZE, hashes=1) for i in range(DEPTH)]
-
-
-def abf_serialize(filters):
-    """Serialize an attenuated bloom filter."""
-    return [bf.to_base64() for bf in filters]
-
-
-def abf_deserialize(self, b64_filters):
-    """Deserialize an attenuated bloom filter."""
-    return [StringBloomFilter.from_base64(b64_bf) for b64_bf in b64_filters]
+FRESHNESS = 1800  # time after unupdated peer filters become stale (30min)
+REFRESH_TIME = 600  # interval when own filters are propagated to peers (10min)
+EXTRA_PROPAGATIONS = 60  # number of propagation allowed between refreshes
 
 
 class Quasar(object):
@@ -43,21 +33,23 @@ class Quasar(object):
     def __init__(self, protocol, queue_limit=8192, history_limit=65536):
         self._protocol = protocol
         self._protocol.quasar = self
+        self._extra_propagations = EXTRA_PROPAGATIONS
         self._subscriptions = set()
-        self._filters = abf_empty()
+        self._filters = bloom.abf_empty(SIZE, DEPTH)
         self._peers = defaultdict(
             lambda: {
                 "timestamp": 0,
-                "filters": abf_empty(),
+                "filters": bloom.abf_empty(SIZE, DEPTH),
             }
         )
-        self._history = []
+        self._history = []  # TODO use pypi.python.org/pypi/fuggetaboutit ?
         self._history_limit = history_limit
         self._events = defaultdict(lambda: Queue(maxsize=queue_limit))
-        self._refresh_loop = LoopingCall(self._refresh).start(FRESHNESS / 3)
+        self._refresh_loop = LoopingCall(self._refresh).start(REFRESH_TIME)
 
     def subscribe(self, topic):
         self._subscriptions.add(topic)
+        self._rebuild()
 
     def unsubscribe(self, topic):
         self._subscriptions.remove(topic)
@@ -72,7 +64,7 @@ class Quasar(object):
         return results
 
     def _refresh(self):
-        self._rebuild()
+        self._rebuild(is_refresh=True)
         self._cull()
 
     def _cull(self):
@@ -82,9 +74,14 @@ class Quasar(object):
             if peerid not in neighbors:
                 del self._peers[peerid]
 
-    def _rebuild(self):
-        """Algorithm 1 from the quasar paper."""
-        self._filters = abf_empty()
+    def _rebuild(self, is_refresh=False):
+        """Algorithm 1 from the quasar paper.
+
+        Args:
+            is_refresh: Force propagate and reset extra propagations.
+        """
+        serialized_before = bloom.abf_serialize(self._filters)
+        self._filters = bloom.abf_empty(SIZE, DEPTH)
 
         # create home attenuated bloom filter from own subscriptions
         for subscription in self._subscriptions:
@@ -98,17 +95,25 @@ class Quasar(object):
             for i in range(1, DEPTH):
                 self._filters[i] = self._filters[i].union(peer_abf[i-1])
 
-        # send updated filter to peers
-        b64_filters = abf_serialize(self._filters)
-        for peer in self._protocol.get_neighbors():
-            self._protocol.callQuasarUpdate(peer, b64_filters)
+        # send updated filter to peers if changed or forced propagate
+        serialized_filters = bloom.abf_serialize(self._filters)
+        filters_updated = serialized_filters != serialized_before
+        if is_refresh or (self._extra_propagations > 0 and filters_updated):
+            for peer in self._protocol.get_neighbors():
+                self._protocol.callQuasarUpdate(peer, serialized_filters)
+            if is_refresh:
+                self._extra_propagations = EXTRA_PROPAGATIONS
+            else:
+                self._extra_propagations -= 1
 
-    def update(self, peer, b64_filters):
+    def update(self, peer, serialized_filters):
         """Update attenuated bloom filters for peer."""
-        if peer in self._protocol.get_neighbors():
-            filters = abf_deserialize(b64_filters)
+        peerids = [p.id for p in self._protocol.get_neighbors()]
+        if peer.id in peerids:
+            filters = bloom.abf_deserialize(serialized_filters)
             self._peers[peer.id]["timestamp"] = time.time()
             self._peers[peer.id]["filters"] = filters
+            self._rebuild()
             return True
         return False
 

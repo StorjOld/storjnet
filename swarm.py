@@ -31,14 +31,17 @@ START_USER_PORT = 5000
 
 
 if __name__ == "__main__":
-    bootstrap_nodes = [["127.0.0.1", START_NET_PORT + i] for i in range(SWARMSIZE)]
+    bootstrap_nodes = [
+        ["127.0.0.1", START_NET_PORT + i] for i in range(SWARMSIZE)
+    ]
     nodes = []
     try:
         # setup swarm
         for i in range(SWARMSIZE):
             netid = binascii.hexlify(os.urandom(32))  # isolate
             api = StorjNet(node_port=START_NET_PORT + i,
-                           bootstrap=bootstrap_nodes, networkid=netid)
+                           bootstrap=bootstrap_nodes, networkid=netid,
+                           noisy=False)
             thread = threading.Thread(
                 target=api.startserver,
                 kwargs={
