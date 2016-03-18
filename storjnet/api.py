@@ -18,15 +18,13 @@ from . protocol import Protocol
 from . version import __version__  # NOQA
 
 
-DEFAULT_NETWORKID = "mainnet"
 # TODO add default bootstrap nodes
-# TODO set all default init values here
 
 
 class StorjNet(apigen.Definition):
 
     def __init__(self, node_key=None, node_port=None, bootstrap=None,
-                 networkid=DEFAULT_NETWORKID, call_timeout=120,
+                 networkid="mainnet", call_timeout=120,
                  limit_send_sec=None, limit_receive_sec=None,
                  limit_send_month=None, limit_receive_month=None,
                  queue_limit=8192, history_limit=65536,
@@ -276,44 +274,29 @@ class StorjNet(apigen.Definition):
         self.stop()
 
 
-def start_swarm(size=100, isolate=True,
-                net_host="127.0.0.1", rpc_host="127.0.0.1",
-                net_start_port=10000, rpc_start_port=20000,
-                networkid=DEFAULT_NETWORKID, call_timeout=120,
-                limit_send_sec=None, limit_receive_sec=None,
-                limit_send_month=None, limit_receive_month=None,
-                queue_limit=8192, history_limit=65536,
-                quiet=False, debug=False, verbose=False, noisy=False):
+def start_swarm(size=64, isolate=True, net_host="127.0.0.1",
+                rpc_host="127.0.0.1", net_start_port=10000,
+                rpc_start_port=20000, **kwargs):
     nodes = []
     try:
 
         # setup bootstrap nodes
         if isolate:
             bootstrap = [[net_host, net_start_port + i] for i in range(size)]
-        else:
-            bootstrap = None  # default
 
         for i in range(size):
 
             # create storjnet node
-            api = StorjNet(
-                node_key=None,  # generate
-                node_port=net_start_port + i,
-                bootstrap=bootstrap,
-                networkid=networkid,
-                call_timeout=call_timeout,
-                limit_send_sec=limit_send_sec,
-                limit_receive_sec=limit_receive_sec,
-                limit_send_month=limit_send_month,
-                limit_receive_month=limit_receive_month,
-                queue_limit=queue_limit,
-                history_limit=history_limit,
-                quiet=quiet, debug=debug, verbose=verbose, noisy=noisy
-            )
+            node_kwargs = kwargs.copy()
+            node_kwargs["node_key"] = None  # always generate
+            node_kwargs["node_port"] = net_start_port + i
+            if isolate:
+                node_kwargs["bootstrap"] = bootstrap
+            storjnet = StorjNet(**node_kwargs)
 
             # run in own thread
             thread = threading.Thread(
-                target=api.startserver,
+                target=storjnet.startserver,
                 kwargs={
                     "hostname": rpc_host,
                     "port": rpc_start_port + i,
@@ -322,7 +305,7 @@ def start_swarm(size=100, isolate=True,
             )
             thread.start()
 
-            nodes.append([api, thread])
+            nodes.append([storjnet, thread])
         return nodes
     except:
         stop_swarm(nodes)
@@ -335,8 +318,8 @@ def stop_swarm(nodes):
         thread.join()
 
 
-def run_swarm(*args, **kwargs):
-    swarm = start_swarm(*args, **kwargs)
+def run_swarm(**kwargs):
+    swarm = start_swarm(**kwargs)
 
     # server until killed
     try:

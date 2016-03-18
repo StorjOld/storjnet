@@ -25,12 +25,5 @@ signal.signal(signal.SIGINT, signal.default_int_handler)
 # log.startLogging(sys.stdout)
 
 
-SWARM_SIZE = 50
-NET_START_PORT = 6000
-RPC_START_PORT = 5000
-
-
 if __name__ == "__main__":
-    run_swarm(size=SWARM_SIZE,
-              net_start_port=NET_START_PORT,
-              rpc_start_port=RPC_START_PORT)
+    run_swarm(size=50, net_start_port=6000, rpc_start_port=5000)
