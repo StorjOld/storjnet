@@ -16,13 +16,11 @@ from . import bloom
 
 
 # TODO make sure all calls are always run in the twisted reactor
-# TODO better to remove extra propagation and just have rapid refreshes?
 
 
 SIZE = 512  # default from quasar paper section 4, first paragraph
 DEPTH = 3  # default from quasar paper section 4, first paragraph
 TTL = 64
-
 FRESHNESS = 1260  # time after unupdated peer filters become stale (21min)
 REFRESH_TIME = 600  # interval when own filters are propagated to peers (10min)
 EXTRA_PROPAGATIONS = 300  # number of propagation allowed between refreshes
@@ -79,6 +77,9 @@ class Quasar(object):
 
         Args:
             is_refresh: Force propagate and reset extra propagations.
+
+        Returns:
+            True if filters updated.
         """
         serialized_before = bloom.abf_serialize(self._filters)
         self._filters = bloom.abf_empty(SIZE, DEPTH)
@@ -105,16 +106,22 @@ class Quasar(object):
                 self._extra_propagations = EXTRA_PROPAGATIONS
             else:
                 self._extra_propagations -= 1
+        return filters_updated
 
     def update(self, peer, serialized_filters):
-        """Update attenuated bloom filters for peer."""
+        """Update attenuated bloom filters for peer.
+
+        Returns:
+            True if filters updated.
+        """
         peerids = [p.id for p in self._protocol.get_neighbors()]
         if peer.id in peerids:
             filters = bloom.abf_deserialize(serialized_filters)
             self._peers[peer.id]["timestamp"] = time.time()
             self._peers[peer.id]["filters"] = filters
-            self._rebuild()
-            return True
+            updated = self._rebuild()
+            # TODO log stats here
+            return updated
         return False
 
     def _deliver(self, topic, event):

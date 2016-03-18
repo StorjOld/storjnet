@@ -1,4 +1,6 @@
+import time
 import apigen
+import threading
 import random
 import binascii
 import btctxstore
@@ -16,15 +18,22 @@ from . protocol import Protocol
 from . version import __version__  # NOQA
 
 
+DEFAULT_NETWORKID = "mainnet"
+# TODO add default bootstrap nodes
+# TODO set all default init values here
+
+
 class StorjNet(apigen.Definition):
 
     def __init__(self, node_key=None, node_port=None, bootstrap=None,
-                 networkid="mainnet", call_timeout=120,
+                 networkid=DEFAULT_NETWORKID, call_timeout=120,
                  limit_send_sec=None, limit_receive_sec=None,
                  limit_send_month=None, limit_receive_month=None,
                  queue_limit=8192, history_limit=65536,
                  quiet=False, debug=False, verbose=False, noisy=False):
+        # FIXME add host interface to listen
         # TODO sanatize input
+        # TODO add doc string
 
         self._log = None  # TODO get logger
         self._call_timeout = call_timeout
@@ -265,6 +274,81 @@ class StorjNet(apigen.Definition):
 
     def on_shutdown(self):
         self.stop()
+
+
+def start_swarm(size=100, isolate=True,
+                net_host="127.0.0.1", rpc_host="127.0.0.1",
+                net_start_port=10000, rpc_start_port=20000,
+                networkid=DEFAULT_NETWORKID, call_timeout=120,
+                limit_send_sec=None, limit_receive_sec=None,
+                limit_send_month=None, limit_receive_month=None,
+                queue_limit=8192, history_limit=65536,
+                quiet=False, debug=False, verbose=False, noisy=False):
+    nodes = []
+    try:
+
+        # setup bootstrap nodes
+        if isolate:
+            bootstrap = [[net_host, net_start_port + i] for i in range(size)]
+        else:
+            bootstrap = None  # default
+
+        for i in range(size):
+
+            # create storjnet node
+            api = StorjNet(
+                node_key=None,  # generate
+                node_port=net_start_port + i,
+                bootstrap=bootstrap,
+                networkid=networkid,
+                call_timeout=call_timeout,
+                limit_send_sec=limit_send_sec,
+                limit_receive_sec=limit_receive_sec,
+                limit_send_month=limit_send_month,
+                limit_receive_month=limit_receive_month,
+                queue_limit=queue_limit,
+                history_limit=history_limit,
+                quiet=quiet, debug=debug, verbose=verbose, noisy=noisy
+            )
+
+            # run in own thread
+            thread = threading.Thread(
+                target=api.startserver,
+                kwargs={
+                    "hostname": rpc_host,
+                    "port": rpc_start_port + i,
+                    "handle_sigint": False
+                }
+            )
+            thread.start()
+
+            nodes.append([api, thread])
+        return nodes
+    except:
+        stop_swarm(nodes)
+        raise
+
+
+def stop_swarm(nodes):
+    for api, thread in nodes:
+        api.stopserver()
+        thread.join()
+
+
+def run_swarm(*args, **kwargs):
+    swarm = start_swarm(*args, **kwargs)
+
+    # server until killed
+    try:
+        while True:
+            time.sleep(1)
+
+    # expected exit mode
+    except KeyboardInterrupt:
+        pass
+
+    finally:
+        stop_swarm(swarm)
 
 
 if __name__ == "__main__":
