@@ -1,3 +1,4 @@
+import os
 import time
 import apigen
 import threading
@@ -275,13 +276,14 @@ class StorjNet(apigen.Definition):
 
 
 def start_swarm(size=64, isolate=True, net_host="127.0.0.1",
-                rpc_host="127.0.0.1", net_start_port=10000,
-                rpc_start_port=20000, **kwargs):
+                rpc_host="127.0.0.1", net_start_port=20000,
+                rpc_start_port=30000, **kwargs):
     nodes = []
     try:
 
         # setup bootstrap nodes
         if isolate:
+            networkid = binascii.hexlify(os.urandom(32))
             bootstrap = [[net_host, net_start_port + i] for i in range(size)]
 
         for i in range(size):
@@ -292,6 +294,8 @@ def start_swarm(size=64, isolate=True, net_host="127.0.0.1",
             node_kwargs["node_port"] = net_start_port + i
             if isolate:
                 node_kwargs["bootstrap"] = bootstrap
+                node_kwargs["networkid"] = networkid
+
             storjnet = StorjNet(**node_kwargs)
 
             # run in own thread
