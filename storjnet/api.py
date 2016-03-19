@@ -275,9 +275,10 @@ class StorjNet(apigen.Definition):
         self.stop()
 
 
-def start_swarm(size=64, isolate=True, net_host="127.0.0.1",
-                rpc_host="127.0.0.1", net_start_port=20000,
-                rpc_start_port=30000, **kwargs):
+def start_swarm(size=64, isolate=True, start_user_rpc_server=True,
+                net_host="127.0.0.1", rpc_host="127.0.0.1",
+                net_start_port=20000, rpc_start_port=30000,
+                **kwargs):
     nodes = []
     try:
 
@@ -299,15 +300,17 @@ def start_swarm(size=64, isolate=True, net_host="127.0.0.1",
             storjnet = StorjNet(**node_kwargs)
 
             # run in own thread
-            thread = threading.Thread(
-                target=storjnet.startserver,
-                kwargs={
-                    "hostname": rpc_host,
-                    "port": rpc_start_port + i,
-                    "handle_sigint": False
-                }
-            )
-            thread.start()
+            thread = None
+            if start_user_rpc_server:
+                thread = threading.Thread(
+                    target=storjnet.startserver,
+                    kwargs={
+                        "hostname": rpc_host,
+                        "port": rpc_start_port + i,
+                        "handle_sigint": False
+                    }
+                )
+                thread.start()
 
             nodes.append([storjnet, thread])
         return nodes
@@ -317,9 +320,11 @@ def start_swarm(size=64, isolate=True, net_host="127.0.0.1",
 
 
 def stop_swarm(nodes):
-    for api, thread in nodes:
-        api.stopserver()
-        thread.join()
+    for storjnet, thread in nodes:
+        storjnet.stop()
+        if thread is not None:
+            storjnet.stopserver()
+            thread.join()
 
 
 def run_swarm(**kwargs):

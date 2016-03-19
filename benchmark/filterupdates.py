@@ -1,4 +1,5 @@
 import os
+import sys  # NOQA
 import json
 import random
 import time
@@ -8,6 +9,7 @@ import signal
 from storjnet import quasar
 from crochet import setup
 from storjnet.api import start_swarm, stop_swarm
+from twisted.python import log  # NOQA
 
 
 # start twisted via crochet and remove twisted handler
@@ -101,7 +103,7 @@ def dump_results(args):
 if __name__ == "__main__":
     args = get_args()
     monkeypath_quasar(args)
-    nodes = start_swarm(size=args["swarm_size"])
+    nodes = start_swarm(size=args["swarm_size"], start_user_rpc_server=False)
     try:
         run_tests(nodes, args)
     finally:
