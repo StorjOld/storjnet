@@ -47,7 +47,7 @@ def _stats_increment(key):
 def _stats_log_constants():
     if _STATS_LOG:
         with _STATS_LOCK:
-            _STATS_DATA["contsants"] = {
+            _STATS_DATA["constants"] = {
                 "size": SIZE, "depth": DEPTH, "ttl": TTL,
                 "freshness": FRESHNESS, "refresh_time": REFRESH_TIME,
                 "extra_propagations": EXTRA_PROPAGATIONS

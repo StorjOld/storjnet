@@ -1,5 +1,4 @@
 import os
-import sys  # NOQA
 import json
 import random
 import time
@@ -9,15 +8,19 @@ import signal
 from storjnet import quasar
 from crochet import setup
 from storjnet.api import start_swarm, stop_swarm
-from twisted.python import log  # NOQA
+import logging
+from twisted.python import log as _log
+
+
+# STFU twisted
+observer = _log.PythonLoggingObserver()
+observer.start()
+logging.basicConfig(level=60)
 
 
 # start twisted via crochet and remove twisted handler
 setup()
 signal.signal(signal.SIGINT, signal.default_int_handler)
-
-
-# log.startLogging(sys.stdout)
 
 
 def monkeypath_quasar(args):
