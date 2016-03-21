@@ -23,6 +23,16 @@ setup()
 signal.signal(signal.SIGINT, signal.default_int_handler)
 
 
+def warmup_dht(nodes):
+    begin = time.time()
+    while time.time() < begin + 300:  # warmup for 5min
+        node = random.choice(nodes)
+        try:  # create random network walks
+            node.dht_get(binascii.hexlify(os.urandom(32)))
+        except:
+            pass
+
+
 def monkeypath_quasar(args):
     quasar._STATS_LOG = True
     quasar.SIZE = args['quasar_size']
@@ -107,6 +117,7 @@ if __name__ == "__main__":
     args = get_args()
     monkeypath_quasar(args)
     nodes = start_swarm(size=args["swarm_size"], start_user_rpc_server=False)
+    warmup_dht(nodes)
     try:
         run_tests(nodes, args)
     finally:
