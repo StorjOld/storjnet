@@ -47,15 +47,16 @@ for sample in samples:
     ksize = 20
     max_amp = ksize ** sample["quasar"]["constants"]["depth"]
     update_called = sample["quasar"]["update_called"]
-    amp = update_called / test_count
-    amp_percent = amp * 100 / max_amp
-    y_amp.append(50.0)  # FIXME
+    num_refreshes = time_total / sample["quasar"]["constants"]["refresh_time"]
+    # FIXME get num_refreshes as datapoint
+    swarm_size = sample["args"]["swarm_size"]
+    amp = update_called / (test_count + (num_refreshes * swarm_size))
+    amp_percent = amp * 100.0 / max_amp
+    y_amp.append(amp_percent)  # FIXME
 
     # get saturation percent
-    num_refreshes = time_total / sample["quasar"]["constants"]["refresh_time"]
     extra_propagations = sample["quasar"]["constants"]["extra_propagations"]
     max_node_updates = num_refreshes * (extra_propagations + 1)
-    swarm_size = sample["args"]["swarm_size"]
     max_called = swarm_size * max_node_updates * ksize  # ~ 880000
     saturation_percent = update_called * 100 / max_called
     y_saturation.append(saturation_percent)
@@ -89,13 +90,13 @@ plot.axis([0, 500, 0, 100])
 lines = plot.plot(x_success, y_success, 'k', label='Update success %')
 plt.setp(lines, color='green', linewidth=2.0)
 lines = plot.plot(x_redundant, y_redundant, 'k', label='Update redundant %')
-plt.setp(lines, color='blue', linewidth=2.0)
+plt.setp(lines, color='orange', linewidth=2.0)
 lines = plot.plot(x_spam, y_spam, 'k', label='Update spam %')
 plt.setp(lines, color='red', linewidth=2.0)
-# lines = plot.plot(x_amp, y_amp, 'k', label='Max amplification %')
-# plt.setp(lines, color='r', linewidth=2.0)
-lines = plot.plot(x_saturation, y_saturation, 'k', label='Max saturation %')
-plt.setp(lines, color='orange', linewidth=2.0)
+lines = plot.plot(x_amp, y_amp, 'k', label='Amplification %')
+plt.setp(lines, color='pink', linewidth=2.0)
+lines = plot.plot(x_saturation, y_saturation, 'k', label='Saturation %')
+plt.setp(lines, color='blue', linewidth=2.0)
 
 
 # create legend

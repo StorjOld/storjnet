@@ -43,10 +43,10 @@ Subscriptions are to random topics from random nodes.
 
     kademlia ksize = 20
     max amp = kademlia ksize ^ quasar depth = 400
-    amp = update called / test count
+    num refreshes = 600 / refresh time = 10
+    amp = update called / (test count + num refreshes * swarm size)
     amp % = amp * 100.0 / max amp
 
-    num refreshes = 600 / refresh time = 10
     max node updates = num refreshes * (extra propagations + 1)
     max update called = swarm size * max node updates * kademlia ksize = 880000
     saturation % = called * 100.0 / max update called
