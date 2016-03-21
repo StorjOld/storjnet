@@ -79,8 +79,7 @@ for sample in samples:
 # setup plot
 fig = plt.figure()
 plot = fig.add_subplot(111)
-title = 'Test effect in change of subscription frequency.'
-plot.set_title(title)
+plot.set_title('Effect of subscription frequency on update call.')
 plot.set_xlabel('Subscriptions / min')
 plot.set_ylabel('%')
 plot.axis([0, 500, 0, 100])
