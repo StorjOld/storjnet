@@ -21,11 +21,11 @@ samples = [
     json.load(open("benchmark/filterupdates_quasar_size_c.json", "r")),
     json.load(open("benchmark/filterupdates_quasar_size_d.json", "r")),
     json.load(open("benchmark/filterupdates_quasar_size_e.json", "r")),
-    json.load(open("benchmark/filterupdates_quasar_size_f.json", "r")),
-    json.load(open("benchmark/filterupdates_quasar_size_g.json", "r")),
-    json.load(open("benchmark/filterupdates_quasar_size_h.json", "r")),
-    json.load(open("benchmark/filterupdates_quasar_size_i.json", "r")),
-    json.load(open("benchmark/filterupdates_quasar_size_j.json", "r")),
+#   json.load(open("benchmark/filterupdates_quasar_size_f.json", "r")),
+#   json.load(open("benchmark/filterupdates_quasar_size_g.json", "r")),
+#   json.load(open("benchmark/filterupdates_quasar_size_h.json", "r")),
+#   json.load(open("benchmark/filterupdates_quasar_size_i.json", "r")),
+#   json.load(open("benchmark/filterupdates_quasar_size_j.json", "r")),
 ]
 
 

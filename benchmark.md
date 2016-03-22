@@ -87,3 +87,135 @@ Does this contradict the increased update success? Should increased false
 positives not result in less update success calls? An additional test with
 smaller bloom filters should be done to confirm it eventually decreases as
 well.
+
+Update: I now think this has to do with rpcudp not being very reliable and
+dropping packets, but have not confirmed this yet.
+
+
+
+## Test 002: Quasar filter size change (quick test)
+
+Test what effect different quasar filter sizes have.
+
+Subscriptions are to random topics from random nodes.
+
+
+### Constants:
+
+ * swarm size: 400 (theoretical maximum amplification)
+ * quasar depth: 2 (limit full cascade to max 400 nodes)
+ * quasar ttl: 64
+ * quasar freshness: 66 (1min 6sec)
+ * quasar refresh time: 60 (1min to fit in 10min test timeframe)
+ * quasar extra propagations: 10
+ * test timedelta: 0.125
+ * test count: 4800
+
+
+### Varibles:
+
+ * quasar size
+
+
+### Mesurements
+
+ * filter update called
+ * filter update successful (filters updated and maybe propagated)
+ * filter update redundant (filters not updated)
+ * filter update spam (call from a peer that is not a neighbor)
+
+
+### Results:
+
+Result normalization:
+
+    # amplificaton (updates calls resulting from a subscription as percent of theoretical maximum) 
+    kademlia ksize = 20
+    max amplification = kademlia ksize ^ quasar depth = 400
+    num refreshes = 600 / refresh time = 10
+    amplification = update called / (test count + num refreshes * swarm size)
+    amplification % = amplification * 100.0 / max amplification
+
+    # saturation (percent of updated calls of theoretical maximum) 
+    max node updates = num refreshes * (extra propagations + 1)
+    max update called = swarm size * max node updates * kademlia ksize = 880000
+    saturation % = called * 100.0 / max update called
+
+    # update calls that led to a change in the nodes attenuated bloom filters
+    update success % = success * 100.0 / update called
+
+    # update calls that did not lead to a change in the nodes attenuated bloom filters
+    update redundant % = redundant * 100.0 / update called
+
+    # update calls not from a neighbor
+    update spam % = spam * 100.0 / update called
+
+
+![Plot](benchmark/filterupdates_quasar_size_plot.png)
+
+
+### Interpretation / Observations
+
+No conclusion could be made.
+
+
+
+## Test 003: Quasar refresh rate change (quick test)
+
+Test what effect different quasar refresh rates have.
+
+Subscriptions are to random topics from random nodes.
+
+
+### Constants:
+
+ * swarm size: 400 (theoretical maximum amplification)
+ * quasar depth: 2 (limit full cascade to max 400 nodes)
+ * quasar ttl: 64
+ * quasar extra propagations: 10
+ * test timedelta: 0.125
+ * test count: 4800
+ * quasar size: 512
+
+
+### Varibles:
+
+ * quasar refresh time
+ * quasar freshness: quasar refresh time + 6
+
+
+### Mesurements
+
+ * filter update called
+ * filter update successful (filters updated and maybe propagated)
+ * filter update redundant (filters not updated)
+ * filter update spam (call from a peer that is not a neighbor)
+
+
+### Results:
+
+Result normalization:
+
+    # saturation (percent of updated calls of theoretical maximum) 
+    kademlia ksize = 20
+    num refreshes = 600 / refresh time = 10
+    max node updates = num refreshes * (extra propagations + 1)
+    max update called = swarm size * max node updates * kademlia ksize = 880000
+    saturation % = called * 100.0 / max update called
+
+    # update calls that led to a change in the nodes attenuated bloom filters
+    update success % = success * 100.0 / update called
+
+    # update calls that did not lead to a change in the nodes attenuated bloom filters
+    update redundant % = redundant * 100.0 / update called
+
+    # update calls not from a neighbor
+    update spam % = spam * 100.0 / update called
+
+
+![Plot](benchmark/filterupdates_quasar_refresh_plot.png)
+
+
+### Interpretation / Observations
+
+No conclusion could be made.

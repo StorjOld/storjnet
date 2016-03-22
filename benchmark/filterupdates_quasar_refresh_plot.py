@@ -22,10 +22,10 @@ samples = [
     json.load(open("benchmark/filterupdates_quasar_refresh_d.json", "r")),
     json.load(open("benchmark/filterupdates_quasar_refresh_e.json", "r")),
     json.load(open("benchmark/filterupdates_quasar_refresh_f.json", "r")),
-    json.load(open("benchmark/filterupdates_quasar_refresh_g.json", "r")),
-    json.load(open("benchmark/filterupdates_quasar_refresh_h.json", "r")),
-    json.load(open("benchmark/filterupdates_quasar_refresh_i.json", "r")),
-    json.load(open("benchmark/filterupdates_quasar_refresh_j.json", "r")),
+#   json.load(open("benchmark/filterupdates_quasar_refresh_g.json", "r")),
+#   json.load(open("benchmark/filterupdates_quasar_refresh_h.json", "r")),
+#   json.load(open("benchmark/filterupdates_quasar_refresh_i.json", "r")),
+#   json.load(open("benchmark/filterupdates_quasar_refresh_j.json", "r")),
 ]
 
 
@@ -42,17 +42,11 @@ for sample in samples:
     x_redundant.append(refresh_time)
     x_spam.append(refresh_time)
 
-    # get y amp percent
+    # get saturation percent
     ksize = 20
-    max_amp = ksize ** sample["quasar"]["constants"]["depth"]
     update_called = sample["quasar"]["update_called"]
     num_refreshes = time_total / sample["quasar"]["constants"]["refresh_time"]
     swarm_size = sample["args"]["swarm_size"]
-    amp = update_called / (test_count + (num_refreshes * swarm_size))
-    amp_percent = amp * 100.0 / max_amp
-    y_amp.append(amp_percent)
-
-    # get saturation percent
     extra_propagations = sample["quasar"]["constants"]["extra_propagations"]
     max_node_updates = num_refreshes * (extra_propagations + 1)
     max_called = swarm_size * max_node_updates * ksize  # ~ 880000
@@ -93,8 +87,6 @@ lines = plot.plot(x_redundant, y_redundant, 'k', label='Update redundant %')
 plt.setp(lines, color='orange', linewidth=2.0)
 lines = plot.plot(x_spam, y_spam, 'k', label='Update spam %')
 plt.setp(lines, color='red', linewidth=2.0)
-lines = plot.plot(x_amp, y_amp, 'k', label='Amplification %')
-plt.setp(lines, color='pink', linewidth=2.0)
 lines = plot.plot(x_saturation, y_saturation, 'k', label='Saturation %')
 plt.setp(lines, color='blue', linewidth=2.0)
 
