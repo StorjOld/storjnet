@@ -112,7 +112,10 @@ class Quasar(object):
 
         # create home attenuated bloom filter from own subscriptions
         for subscription in self._subscriptions:
-            self._filters[0].add(subscription)
+            try:
+                self._filters[0].add(subscription)
+            except IndexError:
+                pass  # BloomFilter is at capacity
 
         # join peer filters
         for peer in self._protocol.get_neighbors():

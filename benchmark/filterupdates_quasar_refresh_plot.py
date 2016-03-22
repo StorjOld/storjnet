@@ -16,16 +16,16 @@ y_spam = []
 
 
 samples = [
-    json.load(open("benchmark/filterupdates_quasar_size_a.json", "r")),
-    json.load(open("benchmark/filterupdates_quasar_size_b.json", "r")),
-    json.load(open("benchmark/filterupdates_quasar_size_c.json", "r")),
-    json.load(open("benchmark/filterupdates_quasar_size_d.json", "r")),
-    json.load(open("benchmark/filterupdates_quasar_size_e.json", "r")),
-    json.load(open("benchmark/filterupdates_quasar_size_f.json", "r")),
-    json.load(open("benchmark/filterupdates_quasar_size_g.json", "r")),
-    json.load(open("benchmark/filterupdates_quasar_size_h.json", "r")),
-    json.load(open("benchmark/filterupdates_quasar_size_i.json", "r")),
-    json.load(open("benchmark/filterupdates_quasar_size_j.json", "r")),
+    json.load(open("benchmark/filterupdates_quasar_refresh_a.json", "r")),
+    json.load(open("benchmark/filterupdates_quasar_refresh_b.json", "r")),
+    json.load(open("benchmark/filterupdates_quasar_refresh_c.json", "r")),
+    json.load(open("benchmark/filterupdates_quasar_refresh_d.json", "r")),
+    json.load(open("benchmark/filterupdates_quasar_refresh_e.json", "r")),
+    json.load(open("benchmark/filterupdates_quasar_refresh_f.json", "r")),
+    json.load(open("benchmark/filterupdates_quasar_refresh_g.json", "r")),
+    json.load(open("benchmark/filterupdates_quasar_refresh_h.json", "r")),
+    json.load(open("benchmark/filterupdates_quasar_refresh_i.json", "r")),
+    json.load(open("benchmark/filterupdates_quasar_refresh_j.json", "r")),
 ]
 
 
@@ -35,12 +35,12 @@ for sample in samples:
     test_timedelta = sample["args"]["test_timedelta"]
     test_count = sample["args"]["test_count"]
     time_total = test_timedelta * test_count
-    quasar_size = sample["quasar"]["constants"]["size"]
-    x_amp.append(quasar_size)
-    x_saturation.append(quasar_size)
-    x_success.append(quasar_size)
-    x_redundant.append(quasar_size)
-    x_spam.append(quasar_size)
+    refresh_time = sample["quasar"]["constants"]["refresh_time"]
+    x_amp.append(refresh_time)
+    x_saturation.append(refresh_time)
+    x_success.append(refresh_time)
+    x_redundant.append(refresh_time)
+    x_spam.append(refresh_time)
 
     # get y amp percent
     ksize = 20
@@ -78,12 +78,12 @@ for sample in samples:
 # setup plot
 fig = plt.figure()
 plot = fig.add_subplot(111)
-plot.set_title('Effect of quasar filter size on update call.')
-plot.set_xlabel('Filter size')
+plot.set_title('Effect of quasar refresh time on update call.')
+plot.set_xlabel('Refresh time in sec.')
 plot.set_ylabel('%')
 # plot.set_xscale('log')
 # plot.set_yscale('log')
-plot.axis([0, 600, 0, 100])
+plot.axis([0, 100, 0, 100])
 
 
 # add plots
@@ -104,4 +104,4 @@ plot = plot.legend(loc='upper center', shadow=False, fontsize='small')
 plot.get_frame().set_facecolor('#00FFFF')
 
 # render
-plt.savefig("benchmark/filterupdates_quasar_size_plot.png")
+plt.savefig("benchmark/filterupdates_quasar_refresh_plot.png")
