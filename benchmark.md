@@ -156,7 +156,8 @@ Result normalization:
 
 ### Interpretation / Observations
 
-No conclusion could be made.
+The tested subscription rate is not enough to saturate the quasar attenuated
+bloom filters?
 
 
 
