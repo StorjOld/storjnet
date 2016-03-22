@@ -67,22 +67,19 @@ Result normalization:
 
 ### Interpretation / Observations
 
-#### Increased subscriptions reduce redundant/spam calls and improve successful calls.
+#### Increased subscriptions reduce redundant calls and improve successful calls.
 
-This should have to do with the fact that every api call is used to update
+This may have to do with the fact that every api call is used to update
 the dht routing table if need, thus more is going on in the network the
 more stable and reliable it becomes. This is a very good property.
 
-Note that this exposes the current dht implimentaton is sub optimal, as an
-isolate test network should find its neighbors quickly and thus result in
-low no update spam.
-
-The increase in successful filter updates can also be attributed to this.
+The increase in successful filter updates could also be attributed to this,
+as success and redundant call seem to be inversely correlated.
 
 
 #### Increased subscriptions reduce amplificaton and saturation
 
-This is likely due to the bloom filter filling up over time and thus
+This may be due to the bloom filter filling up over time and thus
 increasing the rate of false positives (there are no unsubscriptions in the
 test).
 
