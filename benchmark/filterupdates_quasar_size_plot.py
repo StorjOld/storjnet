@@ -16,18 +16,16 @@ y_spam = []
 
 
 samples = [
-    json.load(open("benchmark/filterupdates_sub_freq_test_a.json", "r")),
-    json.load(open("benchmark/filterupdates_sub_freq_test_b.json", "r")),
-    json.load(open("benchmark/filterupdates_sub_freq_test_c.json", "r")),
-    json.load(open("benchmark/filterupdates_sub_freq_test_d.json", "r")),
-    json.load(open("benchmark/filterupdates_sub_freq_test_e.json", "r")),
-    json.load(open("benchmark/filterupdates_sub_freq_test_f.json", "r")),
-    json.load(open("benchmark/filterupdates_sub_freq_test_g.json", "r")),
-    json.load(open("benchmark/filterupdates_sub_freq_test_h.json", "r")),
-    json.load(open("benchmark/filterupdates_sub_freq_test_i.json", "r")),
-    json.load(open("benchmark/filterupdates_sub_freq_test_j.json", "r")),
-    json.load(open("benchmark/filterupdates_sub_freq_test_k.json", "r")),
-    json.load(open("benchmark/filterupdates_sub_freq_test_l.json", "r")),
+    json.load(open("benchmark/filterupdates_quasar_size_a.json", "r")),
+    json.load(open("benchmark/filterupdates_quasar_size_b.json", "r")),
+    json.load(open("benchmark/filterupdates_quasar_size_c.json", "r")),
+    json.load(open("benchmark/filterupdates_quasar_size_d.json", "r")),
+    json.load(open("benchmark/filterupdates_quasar_size_e.json", "r")),
+    json.load(open("benchmark/filterupdates_quasar_size_f.json", "r")),
+    json.load(open("benchmark/filterupdates_quasar_size_g.json", "r")),
+    json.load(open("benchmark/filterupdates_quasar_size_h.json", "r")),
+    json.load(open("benchmark/filterupdates_quasar_size_i.json", "r")),
+    json.load(open("benchmark/filterupdates_quasar_size_j.json", "r")),
 ]
 
 
@@ -37,12 +35,12 @@ for sample in samples:
     test_timedelta = sample["args"]["test_timedelta"]
     test_count = sample["args"]["test_count"]
     time_total = test_timedelta * test_count
-    sub_per_min = float(test_count) / (float(time_total) / 60.0)
-    x_amp.append(sub_per_min)
-    x_saturation.append(sub_per_min)
-    x_success.append(sub_per_min)
-    x_redundant.append(sub_per_min)
-    x_spam.append(sub_per_min)
+    quasar_size = sample["quasar"]["constants"]["size"]
+    x_amp.append(quasar_size)
+    x_saturation.append(quasar_size)
+    x_success.append(quasar_size)
+    x_redundant.append(quasar_size)
+    x_spam.append(quasar_size)
 
     # get y amp percent
     ksize = 20
@@ -85,7 +83,7 @@ plot.set_xlabel('Subscriptions / min')
 plot.set_ylabel('%')
 # plot.set_xscale('log')
 # plot.set_yscale('log')
-plot.axis([0, 1000, 0, 100])
+plot.axis([0, 600, 0, 100])
 
 
 # add plots
