@@ -113,7 +113,6 @@ class Quasar(object):
         # create home attenuated bloom filter from own subscriptions
         for subscription in self._subscriptions:
             self._filters[0].add(subscription)
-            # TODO break spect and add to all filters, prevent cascade?
 
         # join peer filters
         for peer in self._protocol.get_neighbors():

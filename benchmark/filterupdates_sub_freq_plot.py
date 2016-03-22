@@ -27,6 +27,7 @@ samples = [
     json.load(open("benchmark/filterupdates_sub_freq_test_i.json", "r")),
     json.load(open("benchmark/filterupdates_sub_freq_test_j.json", "r")),
     json.load(open("benchmark/filterupdates_sub_freq_test_k.json", "r")),
+    json.load(open("benchmark/filterupdates_sub_freq_test_l.json", "r")),
 ]
 
 
@@ -48,11 +49,10 @@ for sample in samples:
     max_amp = ksize ** sample["quasar"]["constants"]["depth"]
     update_called = sample["quasar"]["update_called"]
     num_refreshes = time_total / sample["quasar"]["constants"]["refresh_time"]
-    # FIXME get num_refreshes as datapoint
     swarm_size = sample["args"]["swarm_size"]
     amp = update_called / (test_count + (num_refreshes * swarm_size))
     amp_percent = amp * 100.0 / max_amp
-    y_amp.append(amp_percent)  # FIXME
+    y_amp.append(amp_percent)
 
     # get saturation percent
     extra_propagations = sample["quasar"]["constants"]["extra_propagations"]
@@ -83,7 +83,8 @@ plot = fig.add_subplot(111)
 plot.set_title('Effect of subscription frequency on update call.')
 plot.set_xlabel('Subscriptions / min')
 plot.set_ylabel('%')
-plot.axis([0, 500, 0, 100])
+# plot.set_xscale('log')
+plot.axis([0, 1000, 0, 100])
 
 
 # add plots

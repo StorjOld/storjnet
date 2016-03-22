@@ -38,8 +38,7 @@ Subscriptions are to random topics from random nodes.
 
 ### Results:
 
-
-    # result normalization
+Result normalization:
 
     # amplificaton (updates calls resulting from a subscription as percent of theoretical maximum) 
     kademlia ksize = 20

@@ -25,7 +25,7 @@ signal.signal(signal.SIGINT, signal.default_int_handler)
 
 def warmup_dht(nodes):
     begin = time.time()
-    while time.time() < begin + 300:  # warmup for 5min
+    while time.time() < (begin + 60.0 * 2.5):  # warmup for 2.5min
         node = random.choice(nodes)
         try:  # create random network walks
             node.dht_get(binascii.hexlify(os.urandom(32)))
