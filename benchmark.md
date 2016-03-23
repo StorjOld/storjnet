@@ -219,4 +219,71 @@ Result normalization:
 
 ### Interpretation / Observations
 
-No conclusion could be made.
+TODO
+
+
+
+## Test 004: Quasar extra propagations change (quick test)
+
+Test what effect different quasar extra propagations have.
+
+Subscriptions are to random topics from random nodes.
+
+
+### Constants:
+
+ * swarm size: 400 (theoretical maximum amplification)
+ * quasar depth: 2 (limit full cascade to max 400 nodes)
+ * quasar ttl: 64
+ * quasar freshness: 66 (1min 6sec)
+ * quasar refresh time: 60 (1min to fit in 10min test timeframe)
+ * test timedelta: 0.125
+ * test count: 4800
+ * quasar size: 512
+
+
+### Varibles:
+
+ * quasar extra propagations
+
+
+### Mesurements
+
+ * filter update called
+ * filter update successful (filters updated and maybe propagated)
+ * filter update redundant (filters not updated)
+ * filter update spam (call from a peer that is not a neighbor)
+
+
+### Results:
+
+Result normalization:
+
+    # amplificaton (updates calls resulting from a subscription as percent of theoretical maximum) 
+    kademlia ksize = 20
+    max amplification = kademlia ksize ^ quasar depth = 400
+    num refreshes = 600 / refresh time = 10
+    amplification = update called / (test count + num refreshes * swarm size)
+    amplification % = amplification * 100.0 / max amplification
+
+    # saturation (percent of updated calls of theoretical maximum) 
+    max node updates = num refreshes * (extra propagations + 1)
+    max update called = swarm size * max node updates * kademlia ksize = 880000
+    saturation % = called * 100.0 / max update called
+
+    # update calls that led to a change in the nodes attenuated bloom filters
+    update success % = success * 100.0 / update called
+
+    # update calls that did not lead to a change in the nodes attenuated bloom filters
+    update redundant % = redundant * 100.0 / update called
+
+    # update calls not from a neighbor
+    update spam % = spam * 100.0 / update called
+
+
+![Plot](benchmark/filterupdates_quasar_extraprop_plot.png)
+
+
+### Interpretation / Observations
+
+TODO
