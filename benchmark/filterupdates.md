@@ -11,10 +11,7 @@ First run quick limited tests to find out what to test extensivly.
  * filter update spam (call from a peer that is not a neighbor)
 
 
-## Test 001: Filter update frequency change (quick test)
-
-Test what effect frequency change of subscriptions has.
-Subscriptions are to random topics from random nodes.
+## Test subscription frequency
 
 ### Constants:
 
@@ -63,10 +60,7 @@ dropping packets, but have not confirmed this yet.
 
 
 
-## Test 002: Quasar filter size change (quick test)
-
-Test what effect different quasar filter sizes have.
-Subscriptions are to random topics from random nodes.
+## Test quasar bloom filter size
 
 ### Constants:
 
@@ -94,7 +88,7 @@ bloom filters?
 
 
 
-## Test 003: Quasar refresh rate change (quick test)
+## Test quasar refresh rate
 
 Test what effect different quasar refresh rates have.
 Subscriptions are to random topics from random nodes.
@@ -120,14 +114,19 @@ Subscriptions are to random topics from random nodes.
 
 ### Interpretation / Observations
 
-TODO
+A larger refresh interval reduces spam as each update call has a higher
+likelyhood of introducing meaningfull changes.
+
+### Conclusion
+
+In the intrest of spam reduction the largest practical refresh interval
+should be chosen.
 
 
 
-## Test 004: Quasar extra propagations change (quick test)
+## Test quasar extra propagations
 
 Test what effect different quasar extra propagations have.
-
 Subscriptions are to random topics from random nodes.
 
 ### Constants:
@@ -148,8 +147,6 @@ Subscriptions are to random topics from random nodes.
 ### Results:
 
 ![Plot](benchmark/filterupdates_quasar_extraprop_plot.png)
-
-
 
 ### Interpretation / Observations
 
