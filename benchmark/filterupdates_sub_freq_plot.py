@@ -70,4 +70,4 @@ plot.get_frame().set_facecolor('#00FFFF')
 
 # render
 plt.savefig("benchmark/filterupdates_sub_freq_plot.png")
-# plt.show()
+plt.show()
