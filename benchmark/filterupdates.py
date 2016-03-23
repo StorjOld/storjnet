@@ -1,4 +1,5 @@
 import os
+import codecs
 import json
 import random
 import time
@@ -56,6 +57,10 @@ def get_args():
         '--test_count', type=int, default=10,
         help='Number subscriptions.'
     )
+    parser.add_argument(
+        '--test_subscription_entropy', type=int, default=256,
+        help='If subscriptions are all random or all to the same topic.'
+    )
 
     # SWARM SETUP
     parser.add_argument(
@@ -96,12 +101,23 @@ def get_args():
     return vars(parser.parse_args())
 
 
+def get_topic(entropy):
+    assert(entropy <= 32)
+    if entropy == 0:
+        return str(0)
+    i = int(codecs.encode(os.urandom(32), 'hex_codec'), 16)
+    mask = 0
+    for m in range(entropy):
+        mask = mask + (1 << m)
+    return str(i & mask)
+
+
 def run_tests(nodes, args):
     timedelta = args["test_timedelta"]
     count = args["test_count"]
     for i in range(count):
         api, thread = random.choice(nodes)
-        api.pubsub_subscribe(binascii.hexlify(os.urandom(32)))
+        api.pubsub_subscribe(get_topic(args["test_subscription_entropy"]))
         time.sleep(timedelta)
 
 
