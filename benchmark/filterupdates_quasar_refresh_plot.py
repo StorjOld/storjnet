@@ -3,11 +3,9 @@ import matplotlib.pyplot as plt  # pip install matplotlib
 import json
 
 
-x_success = []
+x = []
 y_success = []
-x_redundant = []
 y_redundant = []
-x_spam = []
 y_spam = []
 
 
@@ -27,31 +25,37 @@ samples = [
 
 for sample in samples:
     refresh_time = sample["quasar"]["constants"]["refresh_time"]
-    x_success.append(refresh_time)
-    y_success.append(sample["quasar"]["update_successful"])
-    x_redundant.append(refresh_time)
-    y_redundant.append(sample["quasar"]["update_redundant"])
-    x_spam.append(refresh_time)
-    y_spam.append(sample["quasar"]["update_spam"])
+    x.append(refresh_time)
+    success = sample["quasar"]["update_successful"]
+    redundant = sample["quasar"]["update_redundant"]
+    spam = sample["quasar"]["update_spam"]
+    y_success.append(redundant + spam + success)
+    y_redundant.append(redundant + spam)
+    y_spam.append(spam)
 
 
-# setup plot
+# setup
 fig = plt.figure()
 plot = fig.add_subplot(111)
-plot.set_xlabel('Refresh time in sec.')
+plot.set_xlabel('Extra propagations')
 plot.set_ylabel('Update calls')
 # plot.set_xscale('log')
 # plot.set_yscale('log')
-plot.axis([0, 100, 0, 100])
+plot.axis([10, 100, 0, 300000])
 
 
 # add plots
-lines = plot.plot(x_success, y_success, 'k', label='Success %')
+lines = plot.plot(x, y_success, 'k', label='Success')
 plt.setp(lines, color='green', linewidth=2.0)
-lines = plot.plot(x_redundant, y_redundant, 'k', label='Redundant %')
+plot.fill_between(x, y_redundant, y_success, facecolor="#00FF00", alpha=0.5)
+
+lines = plot.plot(x, y_redundant, 'k', label='Redundant')
 plt.setp(lines, color='orange', linewidth=2.0)
-lines = plot.plot(x_spam, y_spam, 'k', label='Spam %')
+plot.fill_between(x, y_spam, y_redundant, facecolor="#FFFF00", alpha=0.5)
+
+lines = plot.plot(x, y_spam, 'k', label='Spam')
 plt.setp(lines, color='red', linewidth=2.0)
+plot.fill_between(x, 0, y_spam, facecolor="#FF0000", alpha=0.5)
 
 
 # create legend
@@ -61,3 +65,4 @@ plot.get_frame().set_facecolor('#00FFFF')
 
 # render
 plt.savefig("benchmark/filterupdates_quasar_refresh_plot.png")
+# plt.show()
