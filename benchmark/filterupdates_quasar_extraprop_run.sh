@@ -59,3 +59,45 @@ time env/bin/python benchmark/filterupdates.py --swarm_size=400\
         --quasar_depth=2 --quasar_ttl=64 --quasar_freshness=66\
         --quasar_refresh_time=60 --quasar_extra_propagations=9\
         &> benchmark/filterupdates_quasar_extraprop_j.json
+
+time env/bin/python benchmark/filterupdates.py --swarm_size=400\
+        --test_timedelta=0.125 --test_count=4800 --quasar_size=512\
+        --quasar_depth=2 --quasar_ttl=64 --quasar_freshness=66\
+        --quasar_refresh_time=60 --quasar_extra_propagations=10\
+        &> benchmark/filterupdates_quasar_extraprop_k.json
+
+time env/bin/python benchmark/filterupdates.py --swarm_size=400\
+        --test_timedelta=0.125 --test_count=4800 --quasar_size=512\
+        --quasar_depth=2 --quasar_ttl=64 --quasar_freshness=66\
+        --quasar_refresh_time=60 --quasar_extra_propagations=11\
+        &> benchmark/filterupdates_quasar_extraprop_l.json
+
+time env/bin/python benchmark/filterupdates.py --swarm_size=400\
+        --test_timedelta=0.125 --test_count=4800 --quasar_size=512\
+        --quasar_depth=2 --quasar_ttl=64 --quasar_freshness=66\
+        --quasar_refresh_time=60 --quasar_extra_propagations=12\
+        &> benchmark/filterupdates_quasar_extraprop_m.json
+
+time env/bin/python benchmark/filterupdates.py --swarm_size=400\
+        --test_timedelta=0.125 --test_count=4800 --quasar_size=512\
+        --quasar_depth=2 --quasar_ttl=64 --quasar_freshness=66\
+        --quasar_refresh_time=60 --quasar_extra_propagations=13\
+        &> benchmark/filterupdates_quasar_extraprop_n.json
+
+time env/bin/python benchmark/filterupdates.py --swarm_size=400\
+        --test_timedelta=0.125 --test_count=4800 --quasar_size=512\
+        --quasar_depth=2 --quasar_ttl=64 --quasar_freshness=66\
+        --quasar_refresh_time=60 --quasar_extra_propagations=14\
+        &> benchmark/filterupdates_quasar_extraprop_o.json
+
+time env/bin/python benchmark/filterupdates.py --swarm_size=400\
+        --test_timedelta=0.125 --test_count=4800 --quasar_size=512\
+        --quasar_depth=2 --quasar_ttl=64 --quasar_freshness=66\
+        --quasar_refresh_time=60 --quasar_extra_propagations=15\
+        &> benchmark/filterupdates_quasar_extraprop_p.json
+
+time env/bin/python benchmark/filterupdates.py --swarm_size=400\
+        --test_timedelta=0.125 --test_count=4800 --quasar_size=512\
+        --quasar_depth=2 --quasar_ttl=64 --quasar_freshness=66\
+        --quasar_refresh_time=60 --quasar_extra_propagations=16\
+        &> benchmark/filterupdates_quasar_extraprop_q.json
