@@ -18,8 +18,15 @@ samples = [
     json.load(open("benchmark/filterupdates_quasar_extraprop_f.json", "r")),
     json.load(open("benchmark/filterupdates_quasar_extraprop_g.json", "r")),
     json.load(open("benchmark/filterupdates_quasar_extraprop_h.json", "r")),
-    json.load(open("benchmark/filterupdates_quasar_extraprop_i.json", "r")),
-    json.load(open("benchmark/filterupdates_quasar_extraprop_j.json", "r")),
+#   json.load(open("benchmark/filterupdates_quasar_extraprop_i.json", "r")),
+#   json.load(open("benchmark/filterupdates_quasar_extraprop_j.json", "r")),
+#   json.load(open("benchmark/filterupdates_quasar_extraprop_k.json", "r")),
+#   json.load(open("benchmark/filterupdates_quasar_extraprop_l.json", "r")),
+#   json.load(open("benchmark/filterupdates_quasar_extraprop_m.json", "r")),
+#   json.load(open("benchmark/filterupdates_quasar_extraprop_n.json", "r")),
+#   json.load(open("benchmark/filterupdates_quasar_extraprop_o.json", "r")),
+#   json.load(open("benchmark/filterupdates_quasar_extraprop_p.json", "r")),
+#   json.load(open("benchmark/filterupdates_quasar_extraprop_q.json", "r")),
 ]
 
 
@@ -40,7 +47,7 @@ plot.set_xlabel('Extra propagations')
 plot.set_ylabel('Update calls')
 # plot.set_xscale('log')
 # plot.set_yscale('log')
-plot.axis([0, 256, 0, 300000])
+plot.axis([0, 16, 0, 250000])
 
 
 # add plots
