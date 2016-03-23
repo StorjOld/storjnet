@@ -47,7 +47,7 @@ plot.set_xlabel('Extra propagations')
 plot.set_ylabel('Update calls')
 # plot.set_xscale('log')
 # plot.set_yscale('log')
-plot.axis([0, 16, 0, 150000])
+plot.axis([0, 16, 0, 300000])
 
 
 # add plots
@@ -71,4 +71,4 @@ plot.get_frame().set_facecolor('#00FFFF')
 
 # render
 plt.savefig("benchmark/filterupdates_quasar_extraprop_plot.png")
-# plt.show()
+plt.show()
