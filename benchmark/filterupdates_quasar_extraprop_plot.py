@@ -40,7 +40,7 @@ plot.set_xlabel('Extra propagations')
 plot.set_ylabel('Update calls')
 # plot.set_xscale('log')
 # plot.set_yscale('log')
-plot.axis([0, 16, 0, 300000])
+plot.axis([0, 256, 0, 300000])
 
 
 # add plots
