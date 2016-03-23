@@ -31,7 +31,7 @@ First run quick limited tests to find out what to test extensivly.
 
 ### Results:
 
-![Plot](benchmark/filterupdates_sub_freq_plot.png)
+![Plot](filterupdates_sub_freq_plot.png)
 
 ### Interpretation / Observations
 
@@ -79,7 +79,7 @@ dropping packets, but have not confirmed this yet.
 
 ### Results:
 
-![Plot](benchmark/filterupdates_quasar_size_plot.png)
+![Plot](filterupdates_quasar_size_plot.png)
 
 ### Interpretation / Observations
 
@@ -110,7 +110,7 @@ Subscriptions are to random topics from random nodes.
 
 ### Results:
 
-![Plot](benchmark/filterupdates_quasar_refresh_plot.png)
+![Plot](filterupdates_quasar_refresh_plot.png)
 
 ### Interpretation / Observations
 
@@ -146,7 +146,7 @@ Subscriptions are to random topics from random nodes.
 
 ### Results:
 
-![Plot](benchmark/filterupdates_quasar_extraprop_plot.png)
+![Plot](filterupdates_quasar_extraprop_plot.png)
 
 ### Interpretation / Observations
 
