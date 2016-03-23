@@ -3,6 +3,15 @@
 First run quick limited tests to find out what to test extensivly.
 
 
+Amplification calculation:
+
+    # amplificaton (updates calls resulting from a subscription as percent of theoretical maximum) 
+    kademlia ksize = 20
+    max amplification = kademlia ksize ^ quasar depth = 400
+    num refreshes = 600 / refresh time = 10
+    amplification = update called / (test count + num refreshes * swarm size)
+    amplification % = amplification * 100.0 / max amplification
+
 
 ## Test 001: Filter update frequency change (quick test)
 
@@ -37,30 +46,6 @@ Subscriptions are to random topics from random nodes.
 
 
 ### Results:
-
-Result normalization:
-
-    # amplificaton (updates calls resulting from a subscription as percent of theoretical maximum) 
-    kademlia ksize = 20
-    max amplification = kademlia ksize ^ quasar depth = 400
-    num refreshes = 600 / refresh time = 10
-    amplification = update called / (test count + num refreshes * swarm size)
-    amplification % = amplification * 100.0 / max amplification
-
-    # saturation (percent of updated calls of theoretical maximum) 
-    max node updates = num refreshes * (extra propagations + 1)
-    max update called = swarm size * max node updates * kademlia ksize = 880000
-    saturation % = called * 100.0 / max update called
-
-    # update calls that led to a change in the nodes attenuated bloom filters
-    update success % = success * 100.0 / update called
-
-    # update calls that did not lead to a change in the nodes attenuated bloom filters
-    update redundant % = redundant * 100.0 / update called
-
-    # update calls not from a neighbor
-    update spam % = spam * 100.0 / update called
-
 
 ![Plot](benchmark/filterupdates_sub_freq_plot.png)
 
@@ -127,30 +112,6 @@ Subscriptions are to random topics from random nodes.
 
 ### Results:
 
-Result normalization:
-
-    # amplificaton (updates calls resulting from a subscription as percent of theoretical maximum) 
-    kademlia ksize = 20
-    max amplification = kademlia ksize ^ quasar depth = 400
-    num refreshes = 600 / refresh time = 10
-    amplification = update called / (test count + num refreshes * swarm size)
-    amplification % = amplification * 100.0 / max amplification
-
-    # saturation (percent of updated calls of theoretical maximum) 
-    max node updates = num refreshes * (extra propagations + 1)
-    max update called = swarm size * max node updates * kademlia ksize = 880000
-    saturation % = called * 100.0 / max update called
-
-    # update calls that led to a change in the nodes attenuated bloom filters
-    update success % = success * 100.0 / update called
-
-    # update calls that did not lead to a change in the nodes attenuated bloom filters
-    update redundant % = redundant * 100.0 / update called
-
-    # update calls not from a neighbor
-    update spam % = spam * 100.0 / update called
-
-
 ![Plot](benchmark/filterupdates_quasar_size_plot.png)
 
 
@@ -195,25 +156,6 @@ Subscriptions are to random topics from random nodes.
 
 ### Results:
 
-Result normalization:
-
-    # saturation (percent of updated calls of theoretical maximum) 
-    kademlia ksize = 20
-    num refreshes = 600 / refresh time = 10
-    max node updates = num refreshes * (extra propagations + 1)
-    max update called = swarm size * max node updates * kademlia ksize = 880000
-    saturation % = called * 100.0 / max update called
-
-    # update calls that led to a change in the nodes attenuated bloom filters
-    update success % = success * 100.0 / update called
-
-    # update calls that did not lead to a change in the nodes attenuated bloom filters
-    update redundant % = redundant * 100.0 / update called
-
-    # update calls not from a neighbor
-    update spam % = spam * 100.0 / update called
-
-
 ![Plot](benchmark/filterupdates_quasar_refresh_plot.png)
 
 
@@ -256,30 +198,6 @@ Subscriptions are to random topics from random nodes.
 
 
 ### Results:
-
-Result normalization:
-
-    # amplificaton (updates calls resulting from a subscription as percent of theoretical maximum) 
-    kademlia ksize = 20
-    max amplification = kademlia ksize ^ quasar depth = 400
-    num refreshes = 600 / refresh time = 10
-    amplification = update called / (test count + num refreshes * swarm size)
-    amplification % = amplification * 100.0 / max amplification
-
-    # saturation (percent of updated calls of theoretical maximum) 
-    max node updates = num refreshes * (extra propagations + 1)
-    max update called = swarm size * max node updates * kademlia ksize = 880000
-    saturation % = called * 100.0 / max update called
-
-    # update calls that led to a change in the nodes attenuated bloom filters
-    update success % = success * 100.0 / update called
-
-    # update calls that did not lead to a change in the nodes attenuated bloom filters
-    update redundant % = redundant * 100.0 / update called
-
-    # update calls not from a neighbor
-    update spam % = spam * 100.0 / update called
-
 
 ![Plot](benchmark/filterupdates_quasar_extraprop_plot.png)
 
