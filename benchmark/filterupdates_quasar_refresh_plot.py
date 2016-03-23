@@ -24,8 +24,7 @@ samples = [
 
 
 for sample in samples:
-    refresh_time = sample["quasar"]["constants"]["refresh_time"]
-    x.append(refresh_time)
+    x.append(sample["quasar"]["constants"]["refresh_time"])
     success = sample["quasar"]["update_successful"]
     redundant = sample["quasar"]["update_redundant"]
     spam = sample["quasar"]["update_spam"]
@@ -37,7 +36,7 @@ for sample in samples:
 # setup
 fig = plt.figure()
 plot = fig.add_subplot(111)
-plot.set_xlabel('Extra propagations')
+plot.set_xlabel('Refresh time in seconds')
 plot.set_ylabel('Update calls')
 # plot.set_xscale('log')
 # plot.set_yscale('log')

@@ -42,7 +42,7 @@ for sample in samples:
 # setup
 fig = plt.figure()
 plot = fig.add_subplot(111)
-plot.set_xlabel('Extra propagations')
+plot.set_xlabel('Subscriptions per min')
 plot.set_ylabel('Update calls')
 # plot.set_xscale('log')
 # plot.set_yscale('log')

@@ -3,6 +3,13 @@
 First run quick limited tests to find out what to test extensivly.
 
 
+### Mesurements
+
+ * filter update called
+ * filter update successful (filters updated and maybe propagated)
+ * filter update redundant (filters not updated)
+ * filter update spam (call from a peer that is not a neighbor)
+
 
 ## Test 001: Filter update frequency change (quick test)
 
@@ -24,12 +31,6 @@ Subscriptions are to random topics from random nodes.
  * test timedelta
  * test count
 
-### Mesurements
-
- * filter update called
- * filter update successful (filters updated and maybe propagated)
- * filter update redundant (filters not updated)
- * filter update spam (call from a peer that is not a neighbor)
 
 ### Results:
 
@@ -82,13 +83,6 @@ Subscriptions are to random topics from random nodes.
 
  * quasar size
 
-### Mesurements
-
- * filter update called
- * filter update successful (filters updated and maybe propagated)
- * filter update redundant (filters not updated)
- * filter update spam (call from a peer that is not a neighbor)
-
 ### Results:
 
 ![Plot](benchmark/filterupdates_quasar_size_plot.png)
@@ -120,13 +114,6 @@ Subscriptions are to random topics from random nodes.
  * quasar refresh time
  * quasar freshness: quasar refresh time + 6
 
-### Mesurements
-
- * filter update called
- * filter update successful (filters updated and maybe propagated)
- * filter update redundant (filters not updated)
- * filter update spam (call from a peer that is not a neighbor)
-
 ### Results:
 
 ![Plot](benchmark/filterupdates_quasar_refresh_plot.png)
@@ -157,13 +144,6 @@ Subscriptions are to random topics from random nodes.
 ### Varibles:
 
  * quasar extra propagations
-
-### Mesurements
-
- * filter update called
- * filter update successful (filters updated and maybe propagated)
- * filter update redundant (filters not updated)
- * filter update spam (call from a peer that is not a neighbor)
 
 ### Results:
 

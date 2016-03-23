@@ -31,8 +31,7 @@ samples = [
 
 
 for sample in samples:
-    extra_propagations = sample["quasar"]["constants"]["extra_propagations"]
-    x.append(extra_propagations)
+    x.append(sample["quasar"]["constants"]["extra_propagations"])
     success = sample["quasar"]["update_successful"]
     redundant = sample["quasar"]["update_redundant"]
     spam = sample["quasar"]["update_spam"]

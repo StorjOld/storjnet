@@ -24,8 +24,7 @@ samples = [
 
 
 for sample in samples:
-    quasar_size = sample["quasar"]["constants"]["size"]
-    x.append(quasar_size)
+    x.append(sample["quasar"]["constants"]["size"])
     success = sample["quasar"]["update_successful"]
     redundant = sample["quasar"]["update_redundant"]
     spam = sample["quasar"]["update_spam"]
@@ -37,7 +36,7 @@ for sample in samples:
 # setup
 fig = plt.figure()
 plot = fig.add_subplot(111)
-plot.set_xlabel('Extra propagations')
+plot.set_xlabel('Bloom filter size')
 plot.set_ylabel('Update calls')
 # plot.set_xscale('log')
 # plot.set_yscale('log')
