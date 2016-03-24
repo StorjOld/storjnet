@@ -70,5 +70,5 @@ plot.get_frame().set_facecolor('#00FFFF')
 
 
 # render
-plt.savefig("benchmark/filterupdates_quasar_extraprop_plot.png")
+plt.savefig("benchmark/filterupdates/quasar_extraprop_plot.png")
 plt.show()

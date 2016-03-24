@@ -63,5 +63,5 @@ plot.get_frame().set_facecolor('#00FFFF')
 
 
 # render
-plt.savefig("benchmark/filterupdates_quasar_size_plot.png")
-# plt.show()
+plt.savefig("benchmark/filterupdates/quasar_size_plot.png")
+plt.show()
