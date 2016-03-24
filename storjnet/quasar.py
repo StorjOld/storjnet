@@ -10,6 +10,7 @@ except ImportError:
     from queue import Queue, Full  # py3
 from collections import defaultdict
 from twisted.internet.task import LoopingCall
+from twisted.internet import defer
 from . import bloom
 
 
@@ -96,7 +97,7 @@ class Quasar(object):
 
     def subscribe(self, topic):
         self._subscriptions.add(topic)
-        self._rebuild()
+        return self._rebuild()
 
     def unsubscribe(self, topic):
         self._subscriptions.remove(topic)
@@ -111,8 +112,24 @@ class Quasar(object):
         return results
 
     def _refresh(self):
-        self._rebuild(is_refresh=True)
-        self._cull()
+        neighbors = self._protocol.get_neighbors()
+
+        def handle(results):
+            for result, neighbor in zip(results, neighbors):
+                if result[0]:
+                    serialized_filters = result[1]
+                    self.update(neighbor, serialized_filters)
+
+            updated = self._rebuild(is_refresh=True)
+            self._cull()
+            return updated
+
+        ds = []
+        for neighbor in neighbors:
+            ds.append(self._protocol.callQuasarFilters(neighbor))
+        d = defer.gatherResults(ds)
+        d.addCallback(handle)
+        return d
 
     def _cull(self):
         """Remove quasar peers that are no longer overlay neighbors."""
@@ -120,6 +137,9 @@ class Quasar(object):
         for peerid in self._peers.keys():
             if peerid not in neighbors:
                 del self._peers[peerid]
+
+    def filters(self):
+        return bloom.abf_serialize(self._filters)
 
     def _rebuild(self, is_refresh=False):
         """Algorithm 1 from the quasar paper.
@@ -148,19 +168,22 @@ class Quasar(object):
             for i in range(1, self.depth):
                 self._filters[i] = self._filters[i].union(peer_abf[i-1])
 
-        # send updated filter to peers if changed or forced propagate
         serialized_filters = bloom.abf_serialize(self._filters)
         filters_updated = serialized_filters != serialized_before
-        if is_refresh or (self._remaining_propagations > 0 and filters_updated):
+
+        # reset remaining propagation if refresh call
+        if is_refresh:
+            self._remaining_propagations = self.extra_propagations
+
+        # send updated filter to peers if updated and remaining propagations
+        elif self._remaining_propagations > 0 and filters_updated:
             for peer in self._protocol.get_neighbors():
                 self._protocol.callQuasarUpdate(peer, serialized_filters)
-            if is_refresh:
-                self._remaining_propagations = self.extra_propagations
-            else:
-                self._remaining_propagations -= 1
+            self._remaining_propagations -= 1
+
         return filters_updated
 
-    def update(self, peer, serialized_filters):
+    def update(self, peer, serialized_filters, is_refresh=False):
         """Update attenuated bloom filters for peer.
 
         Returns:
@@ -172,7 +195,7 @@ class Quasar(object):
             filters = bloom.abf_deserialize(serialized_filters)
             self._peers[peer.id]["timestamp"] = time.time()
             self._peers[peer.id]["filters"] = filters
-            updated = self._rebuild()
+            updated = self._rebuild(is_refresh=is_refresh)
             if updated:
                 self._stats_increment("update", "successful")
             else:

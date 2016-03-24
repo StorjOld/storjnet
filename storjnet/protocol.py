@@ -24,20 +24,26 @@ class Protocol(KademliaProtocol):
         return self.router.findNeighbors(self.router.node,
                                          exclude=self.router.node)
 
+    def rpc_quasar_filters(self, sender, nodeid):
+        # TODO sanatize input
+        source = Node(nodeid, sender[0], sender[1])
+        self.welcomeIfNewNode(source)
+        assert(self.quasar is not None)
+        return self.quasar.filters()
+
     def rpc_quasar_update(self, sender, nodeid, filters):
         # TODO sanatize input
         source = Node(nodeid, sender[0], sender[1])
         self.welcomeIfNewNode(source)
-        if self.quasar is not None:
-            return self.quasar.update(source, filters)
+        assert(self.quasar is not None)
+        return self.quasar.update(source, filters)
 
     def rpc_quasar_notify(self, sender, nodeid, topic, event, publishers, ttl):
         # TODO sanatize input
         source = Node(nodeid, sender[0], sender[1])
         self.welcomeIfNewNode(source)
-        if self.quasar is not None:
-            return self.quasar.publish(topic, event,
-                                       publishers=publishers, ttl=ttl)
+        assert(self.quasar is not None)
+        return self.quasar.publish(topic, event, publishers=publishers, ttl=ttl)
 
     def rpc_message_notify(self, sender, nodeid, message):
         # TODO sanatize input
@@ -71,6 +77,13 @@ class Protocol(KademliaProtocol):
         self.welcomeIfNewNode(source)
         # TODO implement
         return 0  # TODO return bytes written
+
+    def callQuasarFilters(self, nodeToAsk):
+        address = (nodeToAsk.ip, nodeToAsk.port)
+        d = self.quasar_filters(address, self.sourceNode.id)
+        d.addCallback(self.handleCallResponse, nodeToAsk)
+        d.addErrback(self.onError)
+        return d
 
     def callQuasarUpdate(self, nodeToAsk, b64_filters):
         address = (nodeToAsk.ip, nodeToAsk.port)
