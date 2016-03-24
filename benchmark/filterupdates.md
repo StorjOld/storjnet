@@ -34,7 +34,7 @@ Subscriptions are to random topics from random nodes.
 
 ### Results:
 
-![Plot](filterupdates_quasar_refresh_plot.png)
+![Plot](filterupdates/quasar_refresh_plot.png)
 
 ### Interpretation / Observations
 
@@ -66,7 +66,7 @@ should be chosen.
 
 ### Results:
 
-![Plot](filterupdates_sub_freq_plot.png)
+![Plot](filterupdates/sub_freq_plot.png)
 
 ### Interpretation / Observations
 
@@ -95,7 +95,7 @@ the quasar refresh rate and extra propagations being the limiting factors.
 
 ### Results:
 
-![Plot](filterupdates_sub_entropy_plot.png)
+![Plot](filterupdates/sub_entropy_plot.png)
 
 ### Interpretation / Observations
 
@@ -123,7 +123,7 @@ chance the neighboring node already has the entry is higher.
 
 ### Results:
 
-![Plot](filterupdates_quasar_size_plot.png)
+![Plot](filterupdates/quasar_size_plot.png)
 
 ### Interpretation / Observations
 
@@ -154,7 +154,7 @@ Subscriptions are to random topics from random nodes.
 
 ### Results:
 
-![Plot](filterupdates_quasar_extraprop_plot.png)
+![Plot](filterupdates/quasar_extraprop_plot.png)
 
 ### Interpretation / Observations
 
