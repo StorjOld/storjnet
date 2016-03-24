@@ -102,7 +102,7 @@ def get_args():
 
 
 def get_topic(entropy):
-    assert(entropy <= 32)
+    assert(entropy <= 256)
     if entropy == 0:
         return str(0)
     i = int(codecs.encode(os.urandom(32), 'hex_codec'), 16)
