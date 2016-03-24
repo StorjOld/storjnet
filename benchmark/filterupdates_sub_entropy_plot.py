@@ -13,15 +13,13 @@ samples = [
     json.load(open("benchmark/filterupdates_sub_entropy_test_a.json", "r")),
     json.load(open("benchmark/filterupdates_sub_entropy_test_b.json", "r")),
     json.load(open("benchmark/filterupdates_sub_entropy_test_c.json", "r")),
-#   json.load(open("benchmark/filterupdates_sub_entropy_test_d.json", "r")),
-#   json.load(open("benchmark/filterupdates_sub_entropy_test_e.json", "r")),
-#   json.load(open("benchmark/filterupdates_sub_entropy_test_f.json", "r")),
-#   json.load(open("benchmark/filterupdates_sub_entropy_test_g.json", "r")),
-#   json.load(open("benchmark/filterupdates_sub_entropy_test_h.json", "r")),
-#   json.load(open("benchmark/filterupdates_sub_entropy_test_i.json", "r")),
-#   json.load(open("benchmark/filterupdates_sub_entropy_test_j.json", "r")),
-#   json.load(open("benchmark/filterupdates_sub_entropy_test_k.json", "r")),
-#   json.load(open("benchmark/filterupdates_sub_entropy_test_l.json", "r")),
+    json.load(open("benchmark/filterupdates_sub_entropy_test_d.json", "r")),
+    json.load(open("benchmark/filterupdates_sub_entropy_test_e.json", "r")),
+    json.load(open("benchmark/filterupdates_sub_entropy_test_f.json", "r")),
+    json.load(open("benchmark/filterupdates_sub_entropy_test_g.json", "r")),
+    json.load(open("benchmark/filterupdates_sub_entropy_test_h.json", "r")),
+    json.load(open("benchmark/filterupdates_sub_entropy_test_i.json", "r")),
+    json.load(open("benchmark/filterupdates_sub_entropy_test_j.json", "r")),
 ]
 
 
@@ -43,7 +41,7 @@ plot.set_xlabel('Subscription entropy bits')
 plot.set_ylabel('Update calls')
 # plot.set_xscale('log')
 # plot.set_yscale('log')
-plot.axis([0, 9, 0, 150000])
+plot.axis([0, 9, 0, 300000])
 
 
 # add plots

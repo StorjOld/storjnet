@@ -1,7 +1,7 @@
 {
   "args": {
     "quasar_depth": 2, 
-    "quasar_extra_propagations": 10, 
+    "quasar_extra_propagations": 14, 
     "quasar_freshness": 66, 
     "quasar_refresh_time": 60, 
     "quasar_size": 512, 
@@ -13,15 +13,15 @@
   "quasar": {
     "constants": {
       "depth": 2, 
-      "extra_propagations": 10, 
+      "extra_propagations": 14, 
       "freshness": 66, 
       "refresh_time": 60, 
       "size": 512, 
       "ttl": 64
     }, 
-    "update_called": 180009, 
-    "update_redundant": 78237, 
-    "update_spam": 59615, 
-    "update_successful": 42155
+    "update_called": 194571, 
+    "update_redundant": 88670, 
+    "update_spam": 63417, 
+    "update_successful": 42483
   }
 }

@@ -20,13 +20,13 @@ samples = [
     json.load(open("benchmark/filterupdates_quasar_extraprop_h.json", "r")),
     json.load(open("benchmark/filterupdates_quasar_extraprop_i.json", "r")),
     json.load(open("benchmark/filterupdates_quasar_extraprop_j.json", "r")),
-#   json.load(open("benchmark/filterupdates_quasar_extraprop_k.json", "r")),
-#   json.load(open("benchmark/filterupdates_quasar_extraprop_l.json", "r")),
-#   json.load(open("benchmark/filterupdates_quasar_extraprop_m.json", "r")),
-#   json.load(open("benchmark/filterupdates_quasar_extraprop_n.json", "r")),
-#   json.load(open("benchmark/filterupdates_quasar_extraprop_o.json", "r")),
-#   json.load(open("benchmark/filterupdates_quasar_extraprop_p.json", "r")),
-#   json.load(open("benchmark/filterupdates_quasar_extraprop_q.json", "r")),
+    json.load(open("benchmark/filterupdates_quasar_extraprop_k.json", "r")),
+    json.load(open("benchmark/filterupdates_quasar_extraprop_l.json", "r")),
+    json.load(open("benchmark/filterupdates_quasar_extraprop_m.json", "r")),
+    json.load(open("benchmark/filterupdates_quasar_extraprop_n.json", "r")),
+    json.load(open("benchmark/filterupdates_quasar_extraprop_o.json", "r")),
+    json.load(open("benchmark/filterupdates_quasar_extraprop_p.json", "r")),
+    json.load(open("benchmark/filterupdates_quasar_extraprop_q.json", "r")),
 ]
 
 

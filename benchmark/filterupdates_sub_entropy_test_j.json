@@ -2,26 +2,27 @@
   "args": {
     "quasar_depth": 2, 
     "quasar_extra_propagations": 10, 
-    "quasar_freshness": 66, 
-    "quasar_refresh_time": 60, 
+    "quasar_freshness": 126, 
+    "quasar_refresh_time": 120, 
     "quasar_size": 512, 
     "quasar_ttl": 64, 
     "swarm_size": 400, 
     "test_count": 4800, 
+    "test_subscription_entropy": 9, 
     "test_timedelta": 0.125
   }, 
   "quasar": {
     "constants": {
       "depth": 2, 
       "extra_propagations": 10, 
-      "freshness": 66, 
-      "refresh_time": 60, 
+      "freshness": 126, 
+      "refresh_time": 120, 
       "size": 512, 
       "ttl": 64
     }, 
-    "update_called": 180009, 
-    "update_redundant": 78237, 
-    "update_spam": 59615, 
-    "update_successful": 42155
+    "update_called": 165694, 
+    "update_redundant": 57547, 
+    "update_spam": 72421, 
+    "update_successful": 35724
   }
 }
