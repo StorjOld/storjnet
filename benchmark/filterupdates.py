@@ -34,16 +34,6 @@ def warmup_dht(nodes):
             pass
 
 
-def monkeypath_quasar(args):
-    quasar._STATS_LOG = True
-    quasar.SIZE = args['quasar_size']
-    quasar.DEPTH = args['quasar_depth']
-    quasar.TTL = args['quasar_ttl']
-    quasar.FRESHNESS = args['quasar_freshness']
-    quasar.REFRESH_TIME = args['quasar_refresh_time']
-    quasar.EXTRA_PROPAGATIONS = args['quasar_extra_propagations']
-
-
 def get_args():
     description = """Test filter updates."""
     parser = argparse.ArgumentParser(description=description)
@@ -121,21 +111,43 @@ def run_tests(nodes, args):
         time.sleep(timedelta)
 
 
-def dump_results(args):
+def dump_results(args, stats):
+    constants = stats[0]["quasar"]["setup"]
+    update_called = 0
+    update_redundant = 0
+    update_spam = 0
+    update_successful = 0
+    for nodestats in stats:
+        update_called += nodestats["quasar"]["update"]["called"]
+        update_successful += nodestats["quasar"]["update"]["successful"]
+        update_redundant += nodestats["quasar"]["update"]["redundant"]
+        update_spam += nodestats["quasar"]["update"]["spam"]
     data = {
-        "quasar": quasar._STATS_DATA,
-        "args": args
+        "args": args,
+        "quasar": {
+            "constants": constants,
+            "update_called": update_called,
+            "update_redundant": update_redundant,
+            "update_spam": update_spam,
+            "update_successful": update_successful,
+        },
     }
     print(json.dumps(data, indent=2, sort_keys=True))
 
 
 if __name__ == "__main__":
     args = get_args()
-    monkeypath_quasar(args)
-    nodes = start_swarm(size=args["swarm_size"], start_user_rpc_server=False)
+    nodes = start_swarm(
+        size=args["swarm_size"], start_user_rpc_server=False,
+        quasar_size=args["quasar_size"], quasar_depth=args["quasar_depth"],
+        quasar_ttl=args["quasar_ttl"], quasar_freshness=args["quasar_freshness"],
+        quasar_refresh_time=args["quasar_refresh_time"],
+        quasar_extra_propagations=args["quasar_extra_propagations"],
+        log_statistics=True
+    )
     warmup_dht(nodes)
     try:
         run_tests(nodes, args)
     finally:
-        stop_swarm(nodes)
-        dump_results(args)
+        stats = stop_swarm(nodes)
+        dump_results(args, stats)

@@ -43,7 +43,8 @@ class Protocol(KademliaProtocol):
         source = Node(nodeid, sender[0], sender[1])
         self.welcomeIfNewNode(source)
         assert(self.quasar is not None)
-        return self.quasar.publish(topic, event, publishers=publishers, ttl=ttl)
+        return self.quasar.publish(topic, event,
+                                   publishers=publishers, ttl=ttl)
 
     def rpc_message_notify(self, sender, nodeid, message):
         # TODO sanatize input

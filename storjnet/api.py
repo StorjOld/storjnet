@@ -14,7 +14,7 @@ from storjkademlia.storage import ForgetfulStorage
 from storjkademlia.node import Node
 from storjkademlia.network import Server
 from pyp2p.lib import get_unused_port
-from . quasar import Quasar
+from . import quasar
 from . protocol import Protocol
 from . version import __version__  # NOQA
 
@@ -25,14 +25,16 @@ from . version import __version__  # NOQA
 class StorjNet(apigen.Definition):
 
     def __init__(self, node_key=None, node_port=None, bootstrap=None,
-                 networkid="mainnet", call_timeout=120,
-                 limit_send_sec=None, limit_receive_sec=None,
-                 limit_send_month=None, limit_receive_month=None,
-                 queue_limit=8192, quasar_history_limit=65536,
-                 quasar_size=512, quasar_depth=3, quasar_ttl=64,
-                 quasar_freshness=660, quasar_refresh_time=600,
-                 quasar_extra_propagations=300, log_statistics=False,
-                 quiet=False, debug=False, verbose=False, noisy=False):
+                 networkid="mainnet", call_timeout=120, limit_send_sec=None,
+                 limit_receive_sec=None, limit_send_month=None,
+                 limit_receive_month=None, queue_limit=quasar.QUEUE_LIMIT,
+                 quasar_history_limit=quasar.HISTORY_LIMIT,
+                 quasar_size=quasar.SIZE, quasar_depth=quasar.DEPTH,
+                 quasar_ttl=quasar.TTL, quasar_freshness=quasar.FRESHNESS,
+                 quasar_refresh_time=quasar.REFRESH_TIME,
+                 quasar_extra_propagations=quasar.EXTRA_PROPAGATIONS,
+                 log_statistics=False, quiet=False, debug=False,
+                 verbose=False, noisy=False):
         # FIXME add host interface to listen
         # TODO sanatize input
         # TODO add doc string
@@ -78,7 +80,7 @@ class StorjNet(apigen.Definition):
     def _setup_quasar(self, queue_limit, history_limit, size, depth, ttl,
                       freshness, refresh_time, extra_propagations,
                       log_statistics):
-        self._quasar = Quasar(
+        self._quasar = quasar.Quasar(
             self._protocol, queue_limit=queue_limit,
             history_limit=history_limit, size=size, depth=depth, ttl=ttl,
             freshness=freshness, refresh_time=refresh_time,

@@ -21,11 +21,22 @@ from . import bloom
 # TODO make sure all calls are always run in the twisted reactor
 
 
+QUEUE_LIMIT = 8192
+HISTORY_LIMIT = 65536
+SIZE = 512
+DEPTH = 3
+TTL = 64
+FRESHNESS = 660
+REFRESH_TIME = 600
+EXTRA_PROPAGATIONS = 300
+
+
 class Quasar(object):
 
-    def __init__(self, protocol, queue_limit=8192, history_limit=65536,
-                 size=512, depth=3, ttl=64, freshness=660, refresh_time=600,
-                 extra_propagations=300, log_statistics=False):
+    def __init__(self, protocol, queue_limit=QUEUE_LIMIT,
+                 history_limit=HISTORY_LIMIT, size=SIZE, depth=DEPTH, ttl=TTL,
+                 freshness=FRESHNESS, refresh_time=REFRESH_TIME,
+                 extra_propagations=EXTRA_PROPAGATIONS, log_statistics=False):
         """
         Args:
             protocol: RPC object to make remote calls
@@ -82,7 +93,7 @@ class Quasar(object):
         self._events = defaultdict(lambda: Queue(maxsize=queue_limit))
 
         # setup refresh loop
-        self._refresh_loop = LoopingCall(self._refresh).start(self.refresh_time)
+        self._refresh_loop = LoopingCall(self._refresh).start(refresh_time)
 
     def _stats_increment(self, call, effect):
         if self._stats_log:
@@ -162,7 +173,8 @@ class Quasar(object):
 
         # join peer filters
         for peer in self._protocol.get_neighbors():
-            if self._peers[peer.id]["timestamp"] < time.time() - self.freshness:
+            peer_timestamp = self._peers[peer.id]["timestamp"]
+            if peer_timestamp < time.time() - self.freshness:
                 continue  # ignore stale peer filters
             peer_abf = self._peers[peer.id]["filters"]
             for i in range(1, self.depth):
