@@ -78,36 +78,6 @@ With increased subscription entropy the updates increase until it is limited
 by the quasar refresh rate.
 
 
-## Test subscription frequency
-
-### Constants:
-
- * swarm size: 400 (theoretical maximum amplification)
- * quasar size: 512 (largest possable for net rpc transfer)
- * quasar depth: 2 (limit full cascade to max 400 nodes)
- * quasar ttl: 64
- * quasar freshness: 66 (1min 6sec)
- * quasar refresh time: 60 (1min to fit in 10min test timeframe)
- * quasar extra propagations: 10
- * subscription entropy: 256bit
-
-### Varibles:
-
- * test timedelta
- * test count
-
-
-### Results:
-
-![Plot](filterupdates/sub_freq_plot.png)
-
-### Interpretation / Observations
-
-The rate of subscriptions has little overall effect. This is mainly due to
-the quasar refresh rate and extra propagations being the limiting factors.
-
-
-
 ## Test quasar extra propagations
 
 Test what effect different quasar extra propagations have.
@@ -143,6 +113,36 @@ rule this out!
 
 
 
+## Test subscription frequency
+
+### Constants:
+
+ * swarm size: 400 (theoretical maximum amplification)
+ * quasar size: 512 (largest possable for net rpc transfer)
+ * quasar depth: 2 (limit full cascade to max 400 nodes)
+ * quasar ttl: 64
+ * quasar freshness: 66 (1min 6sec)
+ * quasar refresh time: 60 (1min to fit in 10min test timeframe)
+ * quasar extra propagations: 10
+ * subscription entropy: 256bit
+
+### Varibles:
+
+ * test timedelta
+ * test count
+
+
+### Results:
+
+![Plot](filterupdates/sub_freq_plot.png)
+
+### Interpretation / Observations
+
+The rate of subscriptions has little overall effect. This is mainly due to
+the quasar refresh rate and extra propagations being the limiting factors.
+
+
+
 ## Test quasar bloom filter size
 
 ### Constants:
@@ -169,6 +169,3 @@ rule this out!
 
 The tested subscription rate is not enough to saturate the quasar attenuated
 bloom filters?
-
-
-
