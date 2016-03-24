@@ -1,5 +1,5 @@
-import os
 import time
+import copy
 import hashlib
 import umsgpack
 import random
@@ -20,56 +20,79 @@ from . import bloom
 # TODO make sure all calls are always run in the twisted reactor
 
 
-SIZE = 512  # default from quasar paper section 4, first paragraph
-DEPTH = 3  # default from quasar paper section 4, first paragraph
-TTL = 64
-FRESHNESS = 660  # time after unupdated peer filters become stale (11min)
-REFRESH_TIME = 600  # interval when own filters are propagated to peers (10min)
-EXTRA_PROPAGATIONS = 300  # number of propagation allowed between refreshes
-
-
-_STATS_LOG = bool(os.environ.get("STORJNET_QUASAR_LOG_STATS", False))
-_STATS_DATA = {
-    "update_called": 0,
-    "update_successful": 0,
-    "update_redundant": 0,
-    "update_spam": 0,
-}
-_STATS_LOCK = threading.RLock()
-
-
-def _stats_increment(key):
-    if _STATS_LOG:
-        with _STATS_LOCK:
-            _STATS_DATA[key] = _STATS_DATA[key] + 1
-
-
-def _stats_log_constants():
-    if _STATS_LOG:
-        with _STATS_LOCK:
-            _STATS_DATA["constants"] = {
-                "size": SIZE, "depth": DEPTH, "ttl": TTL,
-                "freshness": FRESHNESS, "refresh_time": REFRESH_TIME,
-                "extra_propagations": EXTRA_PROPAGATIONS
-            }
-
-
 class Quasar(object):
 
-    def __init__(self, protocol, queue_limit=8192, history_limit=65536):
-        _stats_log_constants()
+    def __init__(self, protocol, queue_limit=8192, history_limit=65536,
+                 size=512, depth=3, ttl=64, freshness=660, refresh_time=600,
+                 extra_propagations=300, log_statistics=False):
+        """
+        Args:
+            protocol: RPC object to make remote calls
+            queue_limit: Received event limit per topic.
+            history_limit: History limit, used to prevent duplicate events.
+            size:  Bloom filter size.
+            depth:  Attenuated bloom filter depth.
+            ttl:
+            freshness:  Time after unupdated peer filters become stale.
+            refresh_time:  Interval when own filters are rebuilt
+            extra_propagations:  Rebuilds allowed between refreshes.
+        """
+
+        # quasar setup
+        self.size = size
+        self.depth = depth
+        self.ttl = ttl
+        self.freshness = freshness
+        self.refresh_time = refresh_time
+        self.extra_propagations = extra_propagations
+
+        # setup stats logging
+        self._stats_log = log_statistics
+        self._stats_lock = threading.RLock()
+        self._stats_data = {
+            "setup": {
+                "size": self.size, "depth": self.depth, "ttl": self.ttl,
+                "freshness": self.freshness, "refresh_time": self.refresh_time,
+                "extra_propagations": self.extra_propagations
+            },
+            "update": {
+                "called": 0, "successful": 0, "redundant": 0, "spam": 0,
+            }
+        }
+
+        # link protocol interdependencie
         self._protocol = protocol
         self._protocol.quasar = self
-        self._extra_propagations = EXTRA_PROPAGATIONS
+
+        # quasar state
+        self._remaining_propagations = self.extra_propagations
         self._subscriptions = set()
-        self._filters = bloom.abf_empty(SIZE, DEPTH)
+        self._filters = bloom.abf_empty(self.size, self.depth)
         self._peers = defaultdict(
-            lambda: {"timestamp": 0, "filters": bloom.abf_empty(SIZE, DEPTH)}
+            lambda: {
+                "timestamp": 0,
+                "filters": bloom.abf_empty(self.size, self.depth),
+            }
         )
-        self._history = []  # TODO use pypi.python.org/pypi/fuggetaboutit ?
+
+        # event queue per topic and history setup
+        self._history = []
         self._history_limit = history_limit
         self._events = defaultdict(lambda: Queue(maxsize=queue_limit))
-        self._refresh_loop = LoopingCall(self._refresh).start(REFRESH_TIME)
+
+        # setup refresh loop
+        self._refresh_loop = LoopingCall(self._refresh).start(self.refresh_time)
+
+    def _stats_increment(self, call, effect):
+        if self._stats_log:
+            with self._stats_lock:
+                self._stats_data[call][effect] += 1
+
+    def stats(self):
+        if self._stats_log:
+            with self._stats_lock:
+                return copy.deepcopy(self._stats_data)
+        return None
 
     def subscribe(self, topic):
         self._subscriptions.add(topic)
@@ -108,7 +131,7 @@ class Quasar(object):
             True if filters updated.
         """
         serialized_before = bloom.abf_serialize(self._filters)
-        self._filters = bloom.abf_empty(SIZE, DEPTH)
+        self._filters = bloom.abf_empty(self.size, self.depth)
 
         # create home attenuated bloom filter from own subscriptions
         for subscription in self._subscriptions:
@@ -119,22 +142,22 @@ class Quasar(object):
 
         # join peer filters
         for peer in self._protocol.get_neighbors():
-            if self._peers[peer.id]["timestamp"] < time.time() - FRESHNESS:
+            if self._peers[peer.id]["timestamp"] < time.time() - self.freshness:
                 continue  # ignore stale peer filters
             peer_abf = self._peers[peer.id]["filters"]
-            for i in range(1, DEPTH):
+            for i in range(1, self.depth):
                 self._filters[i] = self._filters[i].union(peer_abf[i-1])
 
         # send updated filter to peers if changed or forced propagate
         serialized_filters = bloom.abf_serialize(self._filters)
         filters_updated = serialized_filters != serialized_before
-        if is_refresh or (self._extra_propagations > 0 and filters_updated):
+        if is_refresh or (self._remaining_propagations > 0 and filters_updated):
             for peer in self._protocol.get_neighbors():
                 self._protocol.callQuasarUpdate(peer, serialized_filters)
             if is_refresh:
-                self._extra_propagations = EXTRA_PROPAGATIONS
+                self._remaining_propagations = self.extra_propagations
             else:
-                self._extra_propagations -= 1
+                self._remaining_propagations -= 1
         return filters_updated
 
     def update(self, peer, serialized_filters):
@@ -143,7 +166,7 @@ class Quasar(object):
         Returns:
             True if filters updated.
         """
-        _stats_increment("update_called")
+        self._stats_increment("update", "called")
         peerids = [p.id for p in self._protocol.get_neighbors()]
         if peer.id in peerids:
             filters = bloom.abf_deserialize(serialized_filters)
@@ -151,12 +174,12 @@ class Quasar(object):
             self._peers[peer.id]["filters"] = filters
             updated = self._rebuild()
             if updated:
-                _stats_increment("update_successful")
+                self._stats_increment("update", "successful")
             else:
-                _stats_increment("update_redundant")
+                self._stats_increment("update", "redundant")
             return updated
         else:
-            _stats_increment("update_spam")
+            self._stats_increment("update", "spam")
             return False
 
     def _deliver(self, topic, event):
@@ -184,7 +207,7 @@ class Quasar(object):
 
     def publish(self, topic, event, publishers=None, ttl=None):
         """Algorithm 2 from the quasar paper."""
-        ttl = ttl or TTL
+        ttl = ttl or self.ttl
         publishers = [] if publishers is None else publishers
 
         if self._is_duplicate(event):
@@ -200,7 +223,7 @@ class Quasar(object):
         ttl -= 1
         if ttl == 0:
             return
-        for i in range(DEPTH):
+        for i in range(self.depth):
             for peer in self._protocol.get_neighbors():
                 peer_abf = self._peers[peer.id]["filters"]
                 if topic in peer_abf[i]:

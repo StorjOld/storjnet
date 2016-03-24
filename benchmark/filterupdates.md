@@ -90,8 +90,8 @@ Subscriptions are to random topics from random nodes.
  * quasar ttl: 64
  * quasar freshness: 66 (1min 6sec)
  * quasar refresh time: 60 (1min to fit in 10min test timeframe)
- * test timedelta: 0.125
- * test count: 4800
+ * test timedelta: 2
+ * test count: 300
  * quasar size: 512
  * subscription entropy: 256bit
 

@@ -28,18 +28,25 @@ class StorjNet(apigen.Definition):
                  networkid="mainnet", call_timeout=120,
                  limit_send_sec=None, limit_receive_sec=None,
                  limit_send_month=None, limit_receive_month=None,
-                 queue_limit=8192, history_limit=65536,
+                 queue_limit=8192, quasar_history_limit=65536,
+                 quasar_size=512, quasar_depth=3, quasar_ttl=64,
+                 quasar_freshness=660, quasar_refresh_time=600,
+                 quasar_extra_propagations=300, log_statistics=False,
                  quiet=False, debug=False, verbose=False, noisy=False):
         # FIXME add host interface to listen
         # TODO sanatize input
         # TODO add doc string
 
+        self._log_stats = log_statistics
         self._log = None  # TODO get logger
         self._call_timeout = call_timeout
         self._setup_node(node_key)
         self._setup_protocol(noisy, queue_limit)
         self._setup_kademlia(bootstrap, node_port)
-        self._setup_quasar(queue_limit, history_limit)
+        self._setup_quasar(queue_limit, quasar_history_limit,
+                           quasar_size, quasar_depth, quasar_ttl,
+                           quasar_freshness, quasar_refresh_time,
+                           quasar_extra_propagations, log_statistics)
         # TODO setup streams
 
     def _setup_node(self, node_key):
@@ -68,9 +75,16 @@ class StorjNet(apigen.Definition):
         self._kademlia.listen(self._port)
         # TODO set kademlia logger
 
-    def _setup_quasar(self, queue_limit, history_limit):
-        self._quasar = Quasar(self._protocol, queue_limit=queue_limit,
-                              history_limit=history_limit)
+    def _setup_quasar(self, queue_limit, history_limit, size, depth, ttl,
+                      freshness, refresh_time, extra_propagations,
+                      log_statistics):
+        self._quasar = Quasar(
+            self._protocol, queue_limit=queue_limit,
+            history_limit=history_limit, size=size, depth=depth, ttl=ttl,
+            freshness=freshness, refresh_time=refresh_time,
+            extra_propagations=extra_propagations,
+            log_statistics=log_statistics
+        )
 
     def dht_put_async(self, key, value):
         """Store key/value pair in DHT."""
@@ -268,8 +282,16 @@ class StorjNet(apigen.Definition):
         # TODO sanatize input
         raise NotImplementedError()  # TODO implement
 
+    def stats(self):
+        if self._log_stats:
+            return {
+                "quasar": self._quasar.stats()
+            }
+        return None
+
     def stop(self):
-        pass  # no extra threads/services to stop ... yet
+        # no extra threads/services to stop ... yet
+        return self.stats()
 
     def on_shutdown(self):
         self.stop()
@@ -299,10 +321,10 @@ def start_swarm(size=64, isolate=True, start_user_rpc_server=True,
 
             storjnet = StorjNet(**node_kwargs)
 
-            # run in own thread
-            thread = None
+            # run user rpc interface in own thread
+            user_rpc_thread = None
             if start_user_rpc_server:
-                thread = threading.Thread(
+                user_rpc_thread = threading.Thread(
                     target=storjnet.startserver,
                     kwargs={
                         "hostname": rpc_host,
@@ -310,9 +332,9 @@ def start_swarm(size=64, isolate=True, start_user_rpc_server=True,
                         "handle_sigint": False
                     }
                 )
-                thread.start()
+                user_rpc_thread.start()
 
-            nodes.append([storjnet, thread])
+            nodes.append([storjnet, user_rpc_thread])
         return nodes
     except:
         stop_swarm(nodes)
@@ -320,11 +342,13 @@ def start_swarm(size=64, isolate=True, start_user_rpc_server=True,
 
 
 def stop_swarm(nodes):
-    for storjnet, thread in nodes:
-        storjnet.stop()
-        if thread is not None:
+    stats = []
+    for storjnet, user_rpc_thread in nodes:
+        stats.append(storjnet.stop())
+        if user_rpc_thread is not None:
             storjnet.stopserver()
-            thread.join()
+            user_rpc_thread.join()
+    return stats
 
 
 def run_swarm(**kwargs):
