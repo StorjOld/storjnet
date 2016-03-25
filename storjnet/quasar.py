@@ -69,7 +69,8 @@ class Quasar(object):
             "setup": {
                 "size": self.size, "depth": self.depth, "ttl": self.ttl,
                 "freshness": self.freshness, "refresh_time": self.refresh_time,
-                "extra_propagations": self.extra_propagations
+                "extra_propagations": self.extra_propagations,
+                "pull_filters": pull_filters
             },
             "update": {
                 "called": 0, "successful": 0, "redundant": 0, "spam": 0,

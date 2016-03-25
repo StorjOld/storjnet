@@ -35,7 +35,7 @@ Subscriptions are to random topics from random nodes.
 
 ### Results:
 
-![Plot](filterupdates/quasar_refresh_plot.png)
+![Plot](filterupdates_push/quasar_refresh_plot.png)
 
 ### Interpretation / Observations
 
@@ -67,7 +67,7 @@ should be chosen.
 
 ### Results:
 
-![Plot](filterupdates/sub_entropy_plot.png)
+![Plot](filterupdates_push/sub_entropy_plot.png)
 
 ### Interpretation / Observations
 
@@ -101,7 +101,7 @@ Subscriptions are to random topics from random nodes.
 
 ### Results:
 
-![Plot](filterupdates/quasar_extraprop_plot.png)
+![Plot](filterupdates_push/quasar_extraprop_plot.png)
 
 ### Interpretation / Observations
 
@@ -133,7 +133,7 @@ this is the limit of the test setup in general.
 
 ### Results:
 
-![Plot](filterupdates/sub_freq_plot.png)
+![Plot](filterupdates_push/sub_freq_plot.png)
 
 ### Interpretation / Observations
 
@@ -162,7 +162,7 @@ the quasar refresh rate and extra propagations being the limiting factors.
 
 ### Results:
 
-![Plot](filterupdates/quasar_size_plot.png)
+![Plot](filterupdates_push/quasar_size_plot.png)
 
 ### Interpretation / Observations
 

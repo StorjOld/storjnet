@@ -10,16 +10,16 @@ y_spam = []
 
 
 samples = [
-    json.load(open("benchmark/filterupdates/quasar_refresh_a.json", "r")),
-    json.load(open("benchmark/filterupdates/quasar_refresh_b.json", "r")),
-    json.load(open("benchmark/filterupdates/quasar_refresh_c.json", "r")),
-    json.load(open("benchmark/filterupdates/quasar_refresh_d.json", "r")),
-    json.load(open("benchmark/filterupdates/quasar_refresh_e.json", "r")),
-    json.load(open("benchmark/filterupdates/quasar_refresh_f.json", "r")),
-    json.load(open("benchmark/filterupdates/quasar_refresh_g.json", "r")),
-    json.load(open("benchmark/filterupdates/quasar_refresh_h.json", "r")),
-    json.load(open("benchmark/filterupdates/quasar_refresh_i.json", "r")),
-    json.load(open("benchmark/filterupdates/quasar_refresh_j.json", "r")),
+    json.load(open("benchmark/filterupdates_push/quasar_refresh_a.json", "r")),
+    json.load(open("benchmark/filterupdates_push/quasar_refresh_b.json", "r")),
+    json.load(open("benchmark/filterupdates_push/quasar_refresh_c.json", "r")),
+    json.load(open("benchmark/filterupdates_push/quasar_refresh_d.json", "r")),
+    json.load(open("benchmark/filterupdates_push/quasar_refresh_e.json", "r")),
+    json.load(open("benchmark/filterupdates_push/quasar_refresh_f.json", "r")),
+    json.load(open("benchmark/filterupdates_push/quasar_refresh_g.json", "r")),
+    json.load(open("benchmark/filterupdates_push/quasar_refresh_h.json", "r")),
+    json.load(open("benchmark/filterupdates_push/quasar_refresh_i.json", "r")),
+    json.load(open("benchmark/filterupdates_push/quasar_refresh_j.json", "r")),
 ]
 
 
@@ -63,5 +63,5 @@ plot.get_frame().set_facecolor('#00FFFF')
 
 
 # render
-plt.savefig("benchmark/filterupdates/quasar_refresh_plot.png")
+plt.savefig("benchmark/filterupdates_push/quasar_refresh_plot.png")
 plt.show()

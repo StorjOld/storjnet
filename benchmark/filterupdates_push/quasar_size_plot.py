@@ -10,22 +10,21 @@ y_spam = []
 
 
 samples = [
-    json.load(open("benchmark/filterupdates/sub_entropy_test_a.json", "r")),
-    json.load(open("benchmark/filterupdates/sub_entropy_test_b.json", "r")),
-    json.load(open("benchmark/filterupdates/sub_entropy_test_c.json", "r")),
-    json.load(open("benchmark/filterupdates/sub_entropy_test_d.json", "r")),
-    json.load(open("benchmark/filterupdates/sub_entropy_test_e.json", "r")),
-    json.load(open("benchmark/filterupdates/sub_entropy_test_f.json", "r")),
-    json.load(open("benchmark/filterupdates/sub_entropy_test_g.json", "r")),
-    json.load(open("benchmark/filterupdates/sub_entropy_test_h.json", "r")),
-    json.load(open("benchmark/filterupdates/sub_entropy_test_i.json", "r")),
-    json.load(open("benchmark/filterupdates/sub_entropy_test_j.json", "r")),
+    json.load(open("benchmark/filterupdates_quasar_size_a.json", "r")),
+    json.load(open("benchmark/filterupdates_quasar_size_b.json", "r")),
+    json.load(open("benchmark/filterupdates_quasar_size_c.json", "r")),
+    json.load(open("benchmark/filterupdates_quasar_size_d.json", "r")),
+    json.load(open("benchmark/filterupdates_quasar_size_e.json", "r")),
+    json.load(open("benchmark/filterupdates_quasar_size_f.json", "r")),
+    json.load(open("benchmark/filterupdates_quasar_size_g.json", "r")),
+    json.load(open("benchmark/filterupdates_quasar_size_h.json", "r")),
+    json.load(open("benchmark/filterupdates_quasar_size_i.json", "r")),
+    json.load(open("benchmark/filterupdates_quasar_size_j.json", "r")),
 ]
 
 
 for sample in samples:
-    entropy = sample["args"]["test_subscription_entropy"]
-    x.append(entropy)
+    x.append(sample["quasar"]["constants"]["size"])
     success = sample["quasar"]["update_successful"]
     redundant = sample["quasar"]["update_redundant"]
     spam = sample["quasar"]["update_spam"]
@@ -37,11 +36,11 @@ for sample in samples:
 # setup
 fig = plt.figure()
 plot = fig.add_subplot(111)
-plot.set_xlabel('Subscription entropy bits')
+plot.set_xlabel('Bloom filter size')
 plot.set_ylabel('Update calls')
 # plot.set_xscale('log')
 # plot.set_yscale('log')
-plot.axis([0, 9, 0, 300000])
+plot.axis([8, 512, 0, 200000])
 
 
 # add plots
@@ -64,5 +63,5 @@ plot.get_frame().set_facecolor('#00FFFF')
 
 
 # render
-plt.savefig("benchmark/filterupdates_sub_entropy_plot.png")
+plt.savefig("benchmark/filterupdates_push/quasar_size_plot.png")
 plt.show()
