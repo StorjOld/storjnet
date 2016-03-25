@@ -193,17 +193,17 @@ class Quasar(object):
         # reset remaining propagations and propagate if not pull filters
         if is_refresh:
             if not self.pull_filters:
-                self._propagate_filters()
+                self._propagate_filters(serialized_filters)
             self._remaining_propagations = self.extra_propagations
 
         # send updated filter to peers if updated and remaining propagations
         elif self._remaining_propagations > 0 and filters_updated:
-            self._propagate_filters()
+            self._propagate_filters(serialized_filters)
             self._remaining_propagations -= 1
 
         return filters_updated
 
-    def _propagate_filters(self):
+    def _propagate_filters(self, serialized_filters):
         for peer in self._protocol.get_neighbors():
             self._protocol.callQuasarUpdate(peer, serialized_filters)
 
