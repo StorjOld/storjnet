@@ -107,9 +107,8 @@ Subscriptions are to random topics from random nodes.
 
 Initially increased extra propagations increased the update rate as expected.
 
-However it unclear as to why it peaked at 3-4 extra propagations, could this
-be the limit of the test setup in general? Further testing is required to
-rule this out!
+However it peaked at 8-10 extra propagations,
+this is the limit of the test setup in general.
 
 
 
