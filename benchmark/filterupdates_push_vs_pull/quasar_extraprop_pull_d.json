@@ -1,0 +1,30 @@
+{
+  "args": {
+    "quasar_depth": 2, 
+    "quasar_extra_propagations": 6, 
+    "quasar_freshness": 126, 
+    "quasar_pull_filters": true, 
+    "quasar_refresh_time": 120, 
+    "quasar_size": 512, 
+    "quasar_ttl": 64, 
+    "swarm_size": 400, 
+    "test_count": 300, 
+    "test_subscription_entropy": 256, 
+    "test_timedelta": 2.0
+  }, 
+  "quasar": {
+    "constants": {
+      "depth": 2, 
+      "extra_propagations": 6, 
+      "freshness": 126, 
+      "pull_filters": true, 
+      "refresh_time": 120, 
+      "size": 512, 
+      "ttl": 64
+    }, 
+    "update_called": 149563, 
+    "update_redundant": 99765, 
+    "update_spam": 42459, 
+    "update_successful": 7339
+  }
+}

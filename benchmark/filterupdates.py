@@ -88,6 +88,11 @@ def get_args():
         default=quasar.EXTRA_PROPAGATIONS,
         help='Nr. of propagation allowed between refreshes.'
     )
+    parser.add_argument(
+        '--quasar_pull_filters', type=bool,
+        default=quasar.PULL_FILTERS,
+        help='Pull filters before refresh instead of pushing after refresh.'
+    )
     return vars(parser.parse_args())
 
 
@@ -139,10 +144,13 @@ if __name__ == "__main__":
     args = get_args()
     nodes = start_swarm(
         size=args["swarm_size"], start_user_rpc_server=False,
-        quasar_size=args["quasar_size"], quasar_depth=args["quasar_depth"],
-        quasar_ttl=args["quasar_ttl"], quasar_freshness=args["quasar_freshness"],
+        quasar_size=args["quasar_size"],
+        quasar_depth=args["quasar_depth"],
+        quasar_ttl=args["quasar_ttl"],
+        quasar_freshness=args["quasar_freshness"],
         quasar_refresh_time=args["quasar_refresh_time"],
         quasar_extra_propagations=args["quasar_extra_propagations"],
+        quasar_pull_filters=args["quasar_pull_filters"],
         log_statistics=True
     )
     warmup_dht(nodes)
