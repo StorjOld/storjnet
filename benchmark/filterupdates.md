@@ -112,6 +112,36 @@ this is the limit of the test setup in general.
 
 
 
+## Test push filters vs pull filters for extra propagations
+
+### Constants:
+
+ * swarm size: 400 (theoretical maximum amplification)
+ * quasar size: 512 (largest possable for net rpc transfer)
+ * quasar depth: 2 (limit full cascade to max 400 nodes)
+ * quasar ttl: 64
+ * quasar freshness: 66 (1min 6sec)
+ * quasar refresh time: 60 (1min to fit in 10min test timeframe)
+ * quasar extra propagations: 10
+ * test timedelta: 2
+ * test count: 300
+ * subscription entropy: 256bit
+
+### Varibles:
+
+ * quasar push or pull filters
+
+### Results:
+
+![Plot](filterupdates_push_vs_pull/quasar_extraprop_plot.png)
+
+### Interpretation / Observations
+
+No substantial difference could be found os it is reccomended not to break
+the original spec and stick with pushing filters.
+
+
+
 ## Test subscription frequency
 
 ### Constants:
