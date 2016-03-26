@@ -80,7 +80,7 @@ class StorjNet(apigen.Definition):
 
     def _setup_quasar(self, queue_limit, history_limit, size, depth, ttl,
                       freshness, refresh_time, extra_propagations,
-                      log_statistics, pull_filters):
+                      pull_filters, log_statistics):
         self._quasar = quasar.Quasar(
             self._protocol, queue_limit=queue_limit,
             history_limit=history_limit, size=size, depth=depth, ttl=ttl,
