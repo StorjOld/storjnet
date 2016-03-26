@@ -22,9 +22,9 @@
       "size": 512, 
       "ttl": 64
     }, 
-    "update_called": 135722, 
-    "update_redundant": 94583, 
-    "update_spam": 34501, 
-    "update_successful": 6638
+    "update_called": 123984, 
+    "update_redundant": 67365, 
+    "update_spam": 45092, 
+    "update_successful": 11527
   }
 }

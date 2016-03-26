@@ -17,24 +17,24 @@ pull_samples = [
     json.load(open("benchmark/filterupdates_push_vs_pull/quasar_extraprop_pull_a.json", "r")),  # NOQA
     json.load(open("benchmark/filterupdates_push_vs_pull/quasar_extraprop_pull_b.json", "r")),  # NOQA
     json.load(open("benchmark/filterupdates_push_vs_pull/quasar_extraprop_pull_c.json", "r")),  # NOQA
-#   json.load(open("benchmark/filterupdates_push_vs_pull/quasar_extraprop_pull_d.json", "r")),  # NOQA
-#   json.load(open("benchmark/filterupdates_push_vs_pull/quasar_extraprop_pull_e.json", "r")),  # NOQA
-#   json.load(open("benchmark/filterupdates_push_vs_pull/quasar_extraprop_pull_f.json", "r")),  # NOQA
-#   json.load(open("benchmark/filterupdates_push_vs_pull/quasar_extraprop_pull_g.json", "r")),  # NOQA
-#   json.load(open("benchmark/filterupdates_push_vs_pull/quasar_extraprop_pull_h.json", "r")),  # NOQA
-#   json.load(open("benchmark/filterupdates_push_vs_pull/quasar_extraprop_pull_i.json", "r")),  # NOQA
+    json.load(open("benchmark/filterupdates_push_vs_pull/quasar_extraprop_pull_d.json", "r")),  # NOQA
+    json.load(open("benchmark/filterupdates_push_vs_pull/quasar_extraprop_pull_e.json", "r")),  # NOQA
+    json.load(open("benchmark/filterupdates_push_vs_pull/quasar_extraprop_pull_f.json", "r")),  # NOQA
+    json.load(open("benchmark/filterupdates_push_vs_pull/quasar_extraprop_pull_g.json", "r")),  # NOQA
+    json.load(open("benchmark/filterupdates_push_vs_pull/quasar_extraprop_pull_h.json", "r")),  # NOQA
+    json.load(open("benchmark/filterupdates_push_vs_pull/quasar_extraprop_pull_i.json", "r")),  # NOQA
 ]
 
 push_samples = [
     json.load(open("benchmark/filterupdates_push_vs_pull/quasar_extraprop_push_a.json", "r")),  # NOQA
     json.load(open("benchmark/filterupdates_push_vs_pull/quasar_extraprop_push_b.json", "r")),  # NOQA
     json.load(open("benchmark/filterupdates_push_vs_pull/quasar_extraprop_push_c.json", "r")),  # NOQA
-#   json.load(open("benchmark/filterupdates_push_vs_pull/quasar_extraprop_push_d.json", "r")),  # NOQA
-#   json.load(open("benchmark/filterupdates_push_vs_pull/quasar_extraprop_push_e.json", "r")),  # NOQA
-#   json.load(open("benchmark/filterupdates_push_vs_pull/quasar_extraprop_push_f.json", "r")),  # NOQA
-#   json.load(open("benchmark/filterupdates_push_vs_pull/quasar_extraprop_push_g.json", "r")),  # NOQA
-#   json.load(open("benchmark/filterupdates_push_vs_pull/quasar_extraprop_push_h.json", "r")),  # NOQA
-#   json.load(open("benchmark/filterupdates_push_vs_pull/quasar_extraprop_push_i.json", "r")),  # NOQA
+    json.load(open("benchmark/filterupdates_push_vs_pull/quasar_extraprop_push_d.json", "r")),  # NOQA
+    json.load(open("benchmark/filterupdates_push_vs_pull/quasar_extraprop_push_e.json", "r")),  # NOQA
+    json.load(open("benchmark/filterupdates_push_vs_pull/quasar_extraprop_push_f.json", "r")),  # NOQA
+    json.load(open("benchmark/filterupdates_push_vs_pull/quasar_extraprop_push_g.json", "r")),  # NOQA
+    json.load(open("benchmark/filterupdates_push_vs_pull/quasar_extraprop_push_h.json", "r")),  # NOQA
+    json.load(open("benchmark/filterupdates_push_vs_pull/quasar_extraprop_push_i.json", "r")),  # NOQA
 ]
 
 
