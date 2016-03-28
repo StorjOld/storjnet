@@ -260,14 +260,13 @@ class StorjNet(apigen.Definition):
     @apigen.command()
     def stream_list(self):
         """List currently open streams and unread bytes."""
-        result = []
-        for streamid, stream in self._protocol.streams:
+        result = {}
+        for streamid, stream in self._protocol.streams.items():
             peer = stream["peer"]
-            result.append({
-                "streamid": binascii.hexlify(streamid),
-                "peer": [binascii.hexlify(peer.id), peer.ip, peer.port],
-                "buffer": 0  # TODO add buffer size
-            })
+            result[binascii.hexlify(streamid)] = [
+                binascii.hexlify(peer.id),
+                0  # TODO add buffer size
+            ]
         return result
 
     def stream_open_async(self, hexnodeid):
