@@ -48,8 +48,8 @@ class StorjNet(apigen.Definition):
         self._setup_protocol(noisy, message_queue_limit)
         self._setup_kademlia(bootstrap, node_port)
         self._setup_quasar(
-            quasar_queue_limit, quasar_history_limit, quasar_size, quasar_depth,
-            quasar_ttl, quasar_freshness, quasar_refresh_time,
+            quasar_queue_limit, quasar_history_limit, quasar_size,
+            quasar_depth, quasar_ttl, quasar_freshness, quasar_refresh_time,
             quasar_extra_propagations, quasar_pull_filters, log_statistics
         )
         # TODO setup streams
