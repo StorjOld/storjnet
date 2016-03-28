@@ -2,8 +2,15 @@ try:
     from Queue import Queue, Full  # py2
 except ImportError:
     from queue import Queue, Full  # py3
+import os
+from fifobuffer import FifoBuffer
 from storjkademlia.node import Node
 from storjkademlia.protocol import KademliaProtocol
+
+
+MESSAGE_QUEUE_LIMIT = 8192
+STREAM_MAX_COUNT = 8192
+STREAM_BUFFER_LIMIT = 8192
 
 
 class Protocol(KademliaProtocol):
@@ -12,12 +19,18 @@ class Protocol(KademliaProtocol):
 
         # pop storjnet protocol args
         self.noisy = kwargs.pop("noisy", False)
-        queue_limit = kwargs.pop("queue_limit", 8192)
+        message_queue_limit = kwargs.pop("message_queue_limit",
+                                         MESSAGE_QUEUE_LIMIT)
 
         # cant use super due to introspection?
         KademliaProtocol.__init__(self, *args, **kwargs)
 
-        self.messages = Queue(maxsize=queue_limit)
+        # FIXME use defaultdict with queue per nodeid
+        self.messages = Queue(maxsize=message_queue_limit)
+
+        # local streams
+        self.streams = {}  # {streamid: {"peer": Node, "buffer": FifoBuffer}}
+
         self.quasar = None
 
     def get_neighbors(self):
@@ -58,26 +71,61 @@ class Protocol(KademliaProtocol):
             self.log.warning(msg % source)
             return False
 
+    def stream_init(self, streamid, peer):
+
+        # max open streams reached
+        if len(self.streams) >= STREAM_MAX_COUNT:
+            return None
+
+        # init buffer
+        self.streams[streamid] = {
+            "peer": peer, "buffer": FifoBuffer()
+        }
+        return streamid
+
     def rpc_stream_open(self, sender, nodeid):
         # TODO sanatize input
         source = Node(nodeid, sender[0], sender[1])
         self.welcomeIfNewNode(source)
-        # TODO implement
-        return None  # TODO return streamid
+        streamid = os.urandom(32)
+        return self.stream_init(streamid, source)
+
+    def _can_manipulate_stream(self, streamid, source):
+
+        # stream is not open
+        if streamid not in self.streams:
+            return False
+
+        # not stream peer
+        peer = self.streams[streamid]["peer"]
+        if (peer.id != source.id or
+                peer.port != source.port or
+                peer.ip != source.ip):
+            return False
+
+        return True
 
     def rpc_stream_close(self, sender, nodeid, streamid):
         # TODO sanatize input
         source = Node(nodeid, sender[0], sender[1])
         self.welcomeIfNewNode(source)
-        # TODO implement
+        if not self._can_manipulate_stream(streamid, source):
+            return False
+
+        # close stream
+        del self.streams[streamid]
         return True
 
     def rpc_stream_write(self, sender, nodeid, streamid, data):
         # TODO sanatize input
         source = Node(nodeid, sender[0], sender[1])
         self.welcomeIfNewNode(source)
-        # TODO implement
-        return 0  # TODO return bytes written
+        if not self._can_manipulate_stream(streamid, source):
+            return None
+
+        # write to buffer
+        self.streams[streamid]["buffer"].write(data)
+        return len(data)
 
     def callQuasarFilters(self, nodeToAsk):
         address = (nodeToAsk.ip, nodeToAsk.port)
@@ -124,7 +172,7 @@ class Protocol(KademliaProtocol):
 
     def callStreamWrite(self, nodeToAsk, streamid, data):
         address = (nodeToAsk.ip, nodeToAsk.port)
-        d = self.stream_close(address, self.sourceNode.id, streamid, data)
+        d = self.stream_write(address, self.sourceNode.id, streamid, data)
         d.addCallback(self.handleCallResponse, nodeToAsk)
         d.addErrback(self.onError)
         return d

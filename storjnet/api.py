@@ -15,7 +15,7 @@ from storjkademlia.node import Node
 from storjkademlia.network import Server
 from pyp2p.lib import get_unused_port
 from . import quasar
-from . protocol import Protocol
+from . import protocol
 from . version import __version__  # NOQA
 
 
@@ -27,7 +27,9 @@ class StorjNet(apigen.Definition):
     def __init__(self, node_key=None, node_port=None, bootstrap=None,
                  networkid="mainnet", call_timeout=120, limit_send_sec=None,
                  limit_receive_sec=None, limit_send_month=None,
-                 limit_receive_month=None, queue_limit=quasar.QUEUE_LIMIT,
+                 limit_receive_month=None,
+                 message_queue_limit=protocol.MESSAGE_QUEUE_LIMIT,
+                 quasar_queue_limit=quasar.QUEUE_LIMIT,
                  quasar_history_limit=quasar.HISTORY_LIMIT,
                  quasar_size=quasar.SIZE, quasar_depth=quasar.DEPTH,
                  quasar_ttl=quasar.TTL, quasar_freshness=quasar.FRESHNESS,
@@ -43,10 +45,10 @@ class StorjNet(apigen.Definition):
         self._log_stats = log_statistics
         self._call_timeout = call_timeout
         self._setup_node(node_key)
-        self._setup_protocol(noisy, queue_limit)
+        self._setup_protocol(noisy, message_queue_limit)
         self._setup_kademlia(bootstrap, node_port)
         self._setup_quasar(
-            queue_limit, quasar_history_limit, quasar_size, quasar_depth,
+            quasar_queue_limit, quasar_history_limit, quasar_size, quasar_depth,
             quasar_ttl, quasar_freshness, quasar_refresh_time,
             quasar_extra_propagations, quasar_pull_filters, log_statistics
         )
@@ -60,10 +62,12 @@ class StorjNet(apigen.Definition):
         address = self._btctxstore.get_address(self._key)
         self._nodeid = a2b_hashed_base58(address)[1:]
 
-    def _setup_protocol(self, noisy, queue_limit):
+    def _setup_protocol(self, noisy, message_queue_limit):
         storage = ForgetfulStorage()
-        self._protocol = Protocol(Node(self._nodeid), storage, noisy=noisy,
-                                  queue_limit=queue_limit)
+        self._protocol = protocol.Protocol(
+            Node(self._nodeid), storage, noisy=noisy,
+            message_queue_limit=message_queue_limit
+        )
         # TODO set rpc logger
 
     def _setup_kademlia(self, bootstrap, node_port):
@@ -256,34 +260,130 @@ class StorjNet(apigen.Definition):
     @apigen.command()
     def stream_list(self):
         """List currently open streams and unread bytes."""
-        raise NotImplementedError()  # TODO implement
-        # TODO return {streamid: buf_len}
+        result = []
+        for streamid, stream in self._protocol.streams:
+            peer = stream["peer"]
+            result.append({
+                "streamid": binascii.hexlify(streamid),
+                "peer": [binascii.hexlify(peer.id), peer.ip, peer.port],
+                "buffer": 0  # TODO add buffer size
+            })
+        return result
+
+    def stream_open_async(self, hexnodeid):
+
+        def open_remote_buffer(result):
+            if result is None:
+                return None  # failed to find node
+
+            ip, port = result
+            node = Node(binascii.unhexlify(hexnodeid), ip, port)
+
+            def open_local_buffer(result):
+                success, streamid = result
+                if not success:
+                    return None  # failed to open remote buffer
+
+                # open local buffer
+                if self._protocol.stream_init(streamid, node) is None:
+
+                    # opening local buffer failed
+                    # close remote buffer to be nice, fire and forget
+                    self._protocol.callStreamClose(node, streamid)
+                    return None
+                else:
+                    return binascii.hexlify(streamid)
+
+            d = self._protocol.callStreamOpen(node)
+            return d.addCallback(open_local_buffer)
+
+        d = self.dht_find_async(hexnodeid)
+        d.addCallback(open_remote_buffer)
+        return d
 
     @apigen.command()
     def stream_open(self, hexnodeid):
-        """Open a datastream with a node."""
+        """Open a datastream with a node.
+
+        Returns: hexstreamid or None
+        """
         # TODO sanatize input
-        raise NotImplementedError()  # TODO implement
-        # TODO return streamid
+
+        @crochet.wait_for(timeout=self._call_timeout)
+        def func():
+            return self.stream_open_async(hexnodeid)
+        return func()
+
+    def stream_close_async(self, hexstreamid):
+        streamid = binascii.unhexlify(hexstreamid)
+        if streamid not in self._protocol.streams:
+            return False  # already closed
+
+        node = self._protocol.streams[streamid]["peer"]
+
+        # close local buffer
+        del self._protocol.streams[streamid]
+
+        # close remote buffer
+        return self._protocol.callStreamClose(node, streamid)
 
     @apigen.command()
-    def stream_close(self, streamid):
-        """Close a datastream with a node."""
+    def stream_close(self, hexstreamid):
+        """Close a datastream with a node.
+
+        Returns: True if close confirmed on both sides of the connection.
+        """
         # TODO sanatize input
-        raise NotImplementedError()  # TODO implement
+
+        @crochet.wait_for(timeout=self._call_timeout)
+        def func():
+            return self.stream_close_async(hexstreamid)
+        return func()
+
+    def stream_read_bin(self, streamid, size=None):
+        if streamid not in self._protocol.streams:
+            return None
+        return self._protocol.streams[streamid]["buffer"].read(size)
 
     @apigen.command()
-    def stream_read(self, streamid, size):
+    def stream_read(self, hexstreamid, size=None):
         """Read from a datastream with a node."""
         # TODO sanatize input
-        raise NotImplementedError()  # TODO implement
-        # TODO return data
+        streamid = binascii.unhexlify(hexstreamid)
+        data = self.stream_read_bin(streamid, size=size)
+        if data is None:
+            return data
+        return binascii.hexlify(data)
+
+    def stream_write_bin_async(self, streamid, data):
+        if streamid not in self._protocol.streams:
+            return None
+        node = self._protocol.streams[streamid]["peer"]
+        d = self._protocol.callStreamWrite(node, streamid, data)
+
+        def callback(result):
+            success, written = result
+            if success:
+                return written
+            else:
+                return None
+        d.addCallback(callback)
+        return d
+
+    def stream_write_bin(self, streamid, data):
+
+        @crochet.wait_for(timeout=self._call_timeout)
+        def func():
+            return self.stream_write_bin_async(streamid, data)
+        return func()
 
     @apigen.command()
-    def stream_write(self, streamid, data):
+    def stream_write(self, hexstreamid, hexdata):
         """Write to a datastream with a node."""
         # TODO sanatize input
-        raise NotImplementedError()  # TODO implement
+        streamid = binascii.unhexlify(hexstreamid)
+        data = binascii.unhexlify(hexdata)
+        return self.stream_write_bin(streamid, data)
 
     def stats(self):
         if self._log_stats:
