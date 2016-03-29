@@ -158,6 +158,7 @@ class Quasar(object):
                 del self._peers[peerid]
 
     def filters(self):
+        assert(self.pull_filters is True)
         return bloom.abf_serialize(self._filters)
 
     def _rebuild(self, is_refresh=False):

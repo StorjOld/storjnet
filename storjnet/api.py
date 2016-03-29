@@ -110,7 +110,7 @@ class StorjNet(apigen.Definition):
             history_limit=history_limit, size=size, depth=depth, ttl=ttl,
             freshness=freshness, refresh_time=refresh_time,
             extra_propagations=extra_propagations,
-            log_statistics=log_statistics, pull_filters=pull_filters
+            pull_filters=pull_filters, log_statistics=log_statistics
         )
 
     def dht_put_async(self, key, value):
