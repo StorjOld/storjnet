@@ -48,7 +48,6 @@ class StorjNet(apigen.Definition):
                  quasar_ttl=quasar.TTL, quasar_freshness=quasar.FRESHNESS,
                  quasar_refresh_time=quasar.REFRESH_TIME,
                  quasar_extra_propagations=quasar.EXTRA_PROPAGATIONS,
-                 quasar_pull_filters=quasar.PULL_FILTERS,
 
                  # logging options
                  log_statistics=False, quiet=False,
@@ -67,7 +66,7 @@ class StorjNet(apigen.Definition):
         self._setup_quasar(
             quasar_queue_limit, quasar_history_limit, quasar_size,
             quasar_depth, quasar_ttl, quasar_freshness, quasar_refresh_time,
-            quasar_extra_propagations, quasar_pull_filters, log_statistics
+            quasar_extra_propagations, log_statistics
         )
         # TODO setup streams
 
@@ -104,13 +103,13 @@ class StorjNet(apigen.Definition):
 
     def _setup_quasar(self, queue_limit, history_limit, size, depth, ttl,
                       freshness, refresh_time, extra_propagations,
-                      pull_filters, log_statistics):
+                      log_statistics):
         self._quasar = quasar.Quasar(
             self._protocol, queue_limit=queue_limit,
             history_limit=history_limit, size=size, depth=depth, ttl=ttl,
             freshness=freshness, refresh_time=refresh_time,
             extra_propagations=extra_propagations,
-            pull_filters=pull_filters, log_statistics=log_statistics
+            log_statistics=log_statistics
         )
 
     def dht_put_async(self, key, value):

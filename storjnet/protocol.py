@@ -132,13 +132,6 @@ class Protocol(KademliaProtocol):
         self.streams[streamid]["buffer"].write(data)
         return len(data)
 
-    def callQuasarFilters(self, nodeToAsk):
-        address = (nodeToAsk.ip, nodeToAsk.port)
-        d = self.quasar_filters(address, self.sourceNode.id)
-        d.addCallback(self.handleCallResponse, nodeToAsk)
-        d.addErrback(self.onError)
-        return d
-
     def callQuasarUpdate(self, nodeToAsk, b64_filters):
         address = (nodeToAsk.ip, nodeToAsk.port)
         d = self.quasar_update(address, self.sourceNode.id, b64_filters)

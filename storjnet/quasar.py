@@ -38,7 +38,6 @@ class Quasar(object):
                  history_limit=HISTORY_LIMIT, size=SIZE, depth=DEPTH, ttl=TTL,
                  freshness=FRESHNESS, refresh_time=REFRESH_TIME,
                  extra_propagations=EXTRA_PROPAGATIONS,
-                 pull_filters=PULL_FILTERS,
                  log_statistics=False):
         """
         Args:
@@ -60,7 +59,6 @@ class Quasar(object):
         self.freshness = freshness
         self.refresh_time = refresh_time
         self.extra_propagations = extra_propagations
-        self.pull_filters = pull_filters
 
         # setup stats logging
         self._stats_log = log_statistics
@@ -69,8 +67,7 @@ class Quasar(object):
             "setup": {
                 "size": self.size, "depth": self.depth, "ttl": self.ttl,
                 "freshness": self.freshness, "refresh_time": self.refresh_time,
-                "extra_propagations": self.extra_propagations,
-                "pull_filters": pull_filters
+                "extra_propagations": self.extra_propagations
             },
             "update": {
                 "called": 0, "successful": 0, "redundant": 0, "spam": 0,
@@ -128,27 +125,9 @@ class Quasar(object):
         return results
 
     def _refresh(self):
-        if self.pull_filters:
-            neighbors = self._protocol.get_neighbors()
-
-            def handle(results):
-                for result, neighbor in zip(results, neighbors):
-                    if result[0]:
-                        serialized_filters = result[1]
-                        self.update(neighbor, serialized_filters)
-
-                self._rebuild(is_refresh=True)
-                self._cull()
-
-            ds = []
-            for neighbor in neighbors:
-                ds.append(self._protocol.callQuasarFilters(neighbor))
-            d = defer.gatherResults(ds)
-            d.addCallback(handle)
-            return d
-        else:
-            self._rebuild(is_refresh=True)
-            self._cull()
+        updated = self._rebuild(is_refresh=True)
+        self._cull()
+        return updated
 
     def _cull(self):
         """Remove quasar peers that are no longer overlay neighbors."""
@@ -156,10 +135,6 @@ class Quasar(object):
         for peerid in self._peers.keys():
             if peerid not in neighbors:
                 del self._peers[peerid]
-
-    def filters(self):
-        assert(self.pull_filters is True)
-        return bloom.abf_serialize(self._filters)
 
     def _rebuild(self, is_refresh=False):
         """Algorithm 1 from the quasar paper.
@@ -194,8 +169,7 @@ class Quasar(object):
 
         # reset remaining propagations and propagate if not pull filters
         if is_refresh:
-            if not self.pull_filters:
-                self._propagate_filters(serialized_filters)
+            self._propagate_filters(serialized_filters)
             self._remaining_propagations = self.extra_propagations
 
         # send updated filter to peers if updated and remaining propagations
