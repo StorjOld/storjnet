@@ -6,7 +6,8 @@ from io import BytesIO
 
 class FifoBuffer(object):
 
-    def __init__(self):
+    def __init__(self, buffer_limit=None):
+        # TODO respect buffer_limit
         self.buf = BytesIO()
         self.available = 0    # Bytes available for reading
         self.size = 0

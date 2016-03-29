@@ -19,14 +19,18 @@ class Protocol(KademliaProtocol):
 
         # pop storjnet protocol args
         self.noisy = kwargs.pop("noisy", False)
-        message_queue_limit = kwargs.pop("message_queue_limit",
-                                         MESSAGE_QUEUE_LIMIT)
+        self.message_queue_limit = kwargs.pop("message_queue_limit",
+                                              MESSAGE_QUEUE_LIMIT)
+        self.stream_max_count = kwargs.pop("stream_max_count",
+                                           STREAM_MAX_COUNT)
+        self.stream_buffer_limit = kwargs.pop("stream_buffer_limit",
+                                              STREAM_BUFFER_LIMIT)
 
         # cant use super due to introspection?
         KademliaProtocol.__init__(self, *args, **kwargs)
 
         # FIXME use defaultdict with queue per nodeid
-        self.messages = Queue(maxsize=message_queue_limit)
+        self.messages = Queue(maxsize=self.message_queue_limit)
 
         # local streams
         self.streams = {}  # {streamid: {"peer": Node, "buffer": FifoBuffer}}
@@ -74,12 +78,13 @@ class Protocol(KademliaProtocol):
     def stream_init(self, streamid, peer):
 
         # max open streams reached
-        if len(self.streams) >= STREAM_MAX_COUNT:
+        if len(self.streams) >= self.stream_max_count:
             return None
 
         # init buffer
         self.streams[streamid] = {
-            "peer": peer, "buffer": FifoBuffer()
+            "peer": peer,
+            "buffer": FifoBuffer(buffer_limit=self.stream_buffer_limit)
         }
         return streamid
 

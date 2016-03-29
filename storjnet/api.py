@@ -24,28 +24,45 @@ from . version import __version__  # NOQA
 
 class StorjNet(apigen.Definition):
 
-    def __init__(self, node_key=None, node_port=None, bootstrap=None,
-                 networkid="mainnet", call_timeout=120, limit_send_sec=None,
-                 limit_receive_sec=None, limit_send_month=None,
-                 limit_receive_month=None,
+    def __init__(self,
+
+                 # network options
+                 node_key=None, node_port=None, bootstrap=None,
+                 networkid="mainnet", rpc_call_timeout=120,
+
+                 # bandwidth limits
+                 limit_send_sec=None, limit_receive_sec=None,
+                 limit_send_month=None, limit_receive_month=None,
+
+                 # messaging options
                  message_queue_limit=protocol.MESSAGE_QUEUE_LIMIT,
+
+                 # stream options
+                 stream_max_count=protocol.STREAM_MAX_COUNT,
+                 stream_buffer_limit=protocol.STREAM_BUFFER_LIMIT,
+
+                 # quasar options
                  quasar_queue_limit=quasar.QUEUE_LIMIT,
                  quasar_history_limit=quasar.HISTORY_LIMIT,
                  quasar_size=quasar.SIZE, quasar_depth=quasar.DEPTH,
                  quasar_ttl=quasar.TTL, quasar_freshness=quasar.FRESHNESS,
                  quasar_refresh_time=quasar.REFRESH_TIME,
                  quasar_extra_propagations=quasar.EXTRA_PROPAGATIONS,
-                 quasar_pull_filters=quasar.PULL_FILTERS, log_statistics=False,
-                 quiet=False, debug=False, verbose=False, noisy=False):
+                 quasar_pull_filters=quasar.PULL_FILTERS,
+
+                 # logging options
+                 log_statistics=False, quiet=False,
+                 debug=False, verbose=False, noisy=False):
 
         # FIXME add host interface for network interface to listen on
         # TODO sanatize input
         # TODO add doc string
 
         self._log_stats = log_statistics
-        self._call_timeout = call_timeout
+        self._call_timeout = rpc_call_timeout
         self._setup_node(node_key)
-        self._setup_protocol(noisy, message_queue_limit)
+        self._setup_protocol(noisy, message_queue_limit,
+                             stream_max_count, stream_buffer_limit)
         self._setup_kademlia(bootstrap, node_port)
         self._setup_quasar(
             quasar_queue_limit, quasar_history_limit, quasar_size,
@@ -62,11 +79,14 @@ class StorjNet(apigen.Definition):
         address = self._btctxstore.get_address(self._key)
         self._nodeid = a2b_hashed_base58(address)[1:]
 
-    def _setup_protocol(self, noisy, message_queue_limit):
+    def _setup_protocol(self, noisy, message_queue_limit,
+                        stream_max_count, stream_buffer_limit):
         storage = ForgetfulStorage()
         self._protocol = protocol.Protocol(
             Node(self._nodeid), storage, noisy=noisy,
-            message_queue_limit=message_queue_limit
+            message_queue_limit=message_queue_limit,
+            stream_max_count=stream_max_count,
+            stream_buffer_limit=stream_buffer_limit
         )
         # TODO set rpc logger
 
