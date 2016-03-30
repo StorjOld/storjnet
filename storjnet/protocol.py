@@ -41,13 +41,6 @@ class Protocol(KademliaProtocol):
         return self.router.findNeighbors(self.router.node,
                                          exclude=self.router.node)
 
-    def rpc_quasar_filters(self, sender, nodeid):
-        # TODO sanatize input
-        source = Node(nodeid, sender[0], sender[1])
-        self.welcomeIfNewNode(source)
-        assert(self.quasar is not None)
-        return self.quasar.filters()
-
     def rpc_quasar_update(self, sender, nodeid, filters):
         # TODO sanatize input
         source = Node(nodeid, sender[0], sender[1])
@@ -101,14 +94,14 @@ class Protocol(KademliaProtocol):
         if streamid not in self.streams:
             return False
 
-        # not stream peer
+        # is stream peer
         peer = self.streams[streamid]["peer"]
-        if (peer.id != source.id or
-                peer.port != source.port or
-                peer.ip != source.ip):
-            return False
+        return (
+            peer.id == source.id and
+            peer.port == source.port and
+            peer.ip == source.ip
+        )
 
-        return True
 
     def rpc_stream_close(self, sender, nodeid, streamid):
         # TODO sanatize input
