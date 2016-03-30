@@ -26,4 +26,5 @@ signal.signal(signal.SIGINT, signal.default_int_handler)
 
 
 if __name__ == "__main__":
-    run_swarm(size=50, net_start_port=6000, rpc_start_port=5000)
+    run_swarm(size=50, net_start_port=6000,
+              rpc_start_port=5000, quasar_depth=1)
