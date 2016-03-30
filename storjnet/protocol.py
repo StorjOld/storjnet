@@ -102,7 +102,6 @@ class Protocol(KademliaProtocol):
             peer.ip == source.ip
         )
 
-
     def rpc_stream_close(self, sender, nodeid, streamid):
         # TODO sanatize input
         source = Node(nodeid, sender[0], sender[1])
