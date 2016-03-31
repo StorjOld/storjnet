@@ -9,8 +9,8 @@ from storjkademlia.protocol import KademliaProtocol
 
 
 MESSAGE_QUEUE_LIMIT = 8192
-STREAM_MAX_COUNT = 8192
-STREAM_BUFFER_LIMIT = 8192
+STREAM_MAX_COUNT = 512
+STREAM_BUFFER_LIMIT = 1024 ** 1
 
 
 class Protocol(KademliaProtocol):
