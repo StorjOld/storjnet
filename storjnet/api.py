@@ -51,13 +51,18 @@ class StorjNet(apigen.Definition):
 
                  # logging options
                  log_statistics=False, quiet=False,
-                 debug=False, verbose=False, noisy=False):
+                 debug=False, verbose=False, noisy=False
+
+                 # other options
+                 dht_find_cache_timeout=3600):
 
         # FIXME add host interface for network interface to listen on
         # TODO sanatize input
         # TODO add doc string
 
         self._log_stats = log_statistics
+        self._dht_find_cache = {}  # nodeid -> (ip, port, timestamp)
+        self._dht_find_cache_timeout = dht_find_cache_timeout
         self._call_timeout = rpc_call_timeout
         self._setup_node(node_key)
         self._setup_protocol(noisy, message_queue_limit,
@@ -162,21 +167,43 @@ class StorjNet(apigen.Definition):
             return self.dht_stun_async()
         return func()
 
+    def _dht_find_cached(self, nodeid):
+        if nodeid not in self._dht_find_cache:
+            return None
+        ip, port, timestamp = self._dht_find_cache[nodeid]
+
+        # remove outdated entry
+        if timestamp + self._dht_find_cache_timeout > time.time():
+            del self._dht_find_cache[nodeid]
+            return None
+
+        return defer.succeed([ip, port])
+
+    def _dht_find_add_to_cache(self, nodeid, result):
+
+        # remove any previous entry
+        if nodeid in self._dht_find_cache:
+            del self._dht_find_cache[nodeid]
+
+        # do not cache failed results
+        if result is None:
+            return None
+
+        # add to cache
+        ip, port = result
+        self._dht_find_cache[nodeid] = (ip, port, time.time())
+
+        return result
+
     def dht_find_async(self, hexnodeid):
-        """Get [ip, port] if online, call with own id to stun."""
-        # TODO cache results
-        # TODO sanatize input
         nodeid = binascii.unhexlify(hexnodeid)
+        return self.dht_find_async_bin(nodeid)
 
-        # stun if own id given
-        if nodeid == self._nodeid:
-            return self.dht_stun_async()
-
-        # crawl to find nearest to target nodeid
+    def _dht_spider_find(self, nodeid):
         node = Node(nodeid)
         nearest = self._protocol.router.findNeighbors(node)
         if len(nearest) == 0:
-            return defer.succeed(None)
+            return defer.succeed([])
         spider = NodeSpiderCrawl(self._protocol, node, nearest,
                                  self._kademlia.ksize, self._kademlia.alpha)
         d = spider.find()
@@ -188,6 +215,27 @@ class StorjNet(apigen.Definition):
                     return [node.ip, node.port]
             return None
         d.addCallback(func)
+        return d
+
+    def dht_find_async_bin(self, nodeid):
+        """Get [ip, port] if online, call with own id to stun."""
+        # TODO sanatize input
+
+        # check cached results
+        cached_result = self._dht_find_cached(nodeid)
+        if cached_result is not None:
+            return cached_result
+
+        if nodeid == self._nodeid:  # stun if own id given
+            d = self.dht_stun_async()
+
+        else:  # spider crawl to find nearest to target nodeid
+            d = self._dht_spider_find(nodeid)
+
+        # add result to cache
+        def add_to_cache(result):
+            return self._dht_find_add_to_cache(nodeid, result)
+        d.addCallback(add_to_cache)
         return d
 
     @apigen.command()
