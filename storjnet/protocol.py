@@ -121,8 +121,7 @@ class Protocol(KademliaProtocol):
             return None
 
         # write to buffer
-        self.streams[streamid]["buffer"].write(data)
-        return len(data)
+        return self.streams[streamid]["buffer"].write(data)
 
     def callQuasarUpdate(self, nodeToAsk, b64_filters):
         address = (nodeToAsk.ip, nodeToAsk.port)

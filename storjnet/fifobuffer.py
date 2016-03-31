@@ -7,7 +7,7 @@ from io import BytesIO
 class FifoBuffer(object):
 
     def __init__(self, buffer_limit=None):
-        # TODO respect buffer_limit
+        self.buffer_limit = buffer_limit
         self.buf = BytesIO()
         self.available = 0    # Bytes available for reading
         self.size = 0
@@ -30,6 +30,14 @@ class FifoBuffer(object):
 
     def write(self, data):
         """Appends data to buffer"""
+        available_before = self.available
+
+        # trim data if limit expected
+        has_limit = self.buffer_limit is not None
+        if has_limit and ((len(data) + self.available) > self.buffer_limit):
+            bytes_to_trim = self.buffer_limit - self.available
+            data = data[:len(data) - bytes_to_trim]
+
         if self.size < self.available + len(data):
             # Expand buffer
             new_buf = BytesIO()
@@ -53,3 +61,5 @@ class FifoBuffer(object):
             self.buf.seek(0)
             self.buf.write(data[written:])
         self.buf.seek(read_fp)
+
+        return self.available - available_before
