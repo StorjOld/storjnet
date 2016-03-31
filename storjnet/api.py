@@ -51,7 +51,7 @@ class StorjNet(apigen.Definition):
 
                  # logging options
                  log_statistics=False, quiet=False,
-                 debug=False, verbose=False, noisy=False
+                 debug=False, verbose=False, noisy=False,
 
                  # other options
                  dht_find_cache_timeout=3600):
