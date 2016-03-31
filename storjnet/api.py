@@ -332,7 +332,7 @@ class StorjNet(apigen.Definition):
             peer = stream["peer"]
             result[binascii.hexlify(streamid)] = [
                 binascii.hexlify(peer.id),
-                0  # TODO add buffer size
+                stream["buffer"].available
             ]
         return result
 
