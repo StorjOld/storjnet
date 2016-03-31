@@ -173,7 +173,7 @@ class StorjNet(apigen.Definition):
         ip, port, timestamp = self._dht_find_cache[nodeid]
 
         # remove outdated entry
-        if timestamp + self._dht_find_cache_timeout > time.time():
+        if timestamp + self._dht_find_cache_timeout < time.time():
             del self._dht_find_cache[nodeid]
             return None
 
