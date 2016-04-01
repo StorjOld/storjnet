@@ -35,8 +35,7 @@ class FifoBuffer(object):
         # trim data if limit expected
         has_limit = self.buffer_limit is not None
         if has_limit and ((len(data) + self.available) > self.buffer_limit):
-            bytes_to_trim = self.buffer_limit - self.available
-            data = data[:len(data) - bytes_to_trim]
+            data = data[:self.buffer_limit - self.available]
 
         if self.size < self.available + len(data):
             # Expand buffer
