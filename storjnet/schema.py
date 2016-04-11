@@ -1,4 +1,8 @@
+import six
+import json
+import hashlib
 import jsonschema
+from decimal import Decimal, InvalidOperation
 
 
 SUBSCRIPTION_SCHEMA_FORMAT = {
@@ -122,6 +126,14 @@ EXAMPLE_SUBSCRIPTION_SCHEMA = {
 }
 
 
+EXAMPLE_EVENT = {
+    "foo": True,
+    "bar": 2.1,
+    "baz": "something",
+    "bam": None
+}
+
+
 def validate_subscription_schema(subscription_schema):
     """ Validate subscription schema.
 
@@ -134,14 +146,77 @@ def validate_subscription_schema(subscription_schema):
                 raise jsonschema.exceptions.ValidationError(
                     "Index field '{0}' not in fields!".format(index_field)
                 )
+    # TODO check number min <= max
 
 
 def validate_subscription(subscription_schema, subscription):
     raise NotImplementedError()  # TODO implement
 
 
+def _validate_required_fields(required_fields, event):
+    if set(event.keys()) != required_fields:
+        raise jsonschema.exceptions.ValidationError(
+            "Event fields {0} != {1}".format(
+                set(event.keys()), required_fields
+            )
+        )
+
+
+def _validate_boolean(key, value, description):
+    if not isinstance(value, bool):
+        raise jsonschema.exceptions.ValidationError(
+            "{0} value {1} not a boolean.".format(key, value)
+        )
+
+
+def _validate_string(key, value, description):
+    if not isinstance(value, six.string_types):
+        raise jsonschema.exceptions.ValidationError(
+            "{0} value {1} not a string.".format(key, value)
+        )
+
+
+def _validate_enum(key, value, description):
+    if value not in description["choices"]:
+        raise jsonschema.exceptions.ValidationError(
+            "{0} value {1} not in allowed choices {2}".format(
+                key, value, description["choices"]
+            )
+        )
+
+
+def _validate_number(key, value, description):
+    try:
+        number = Decimal(value)
+    except InvalidOperation:
+        raise jsonschema.exceptions.ValidationError(
+            "{0} value {1} not a number.".format(key, value)
+        )
+    minimum = Decimal(description["minimum"])
+    maximum = Decimal(description["maximum"])
+    if not (minimum <= number <= maximum):
+        raise jsonschema.exceptions.ValidationError(
+            "{0} value {1} not in limits {2} {3}.".format(minimum, maximum)
+        )
+
+
 def validate_event(subscription_schema, event):
-    raise NotImplementedError()  # TODO implement
+    """Validate event is for a given subscription schema."""
+    validate_subscription_schema(subscription_schema)
+    if not isinstance(event, dict):
+        raise jsonschema.exceptions.ValidationError("Event must be a dict.")
+    required_fields = set(subscription_schema["fields"].keys())
+    _validate_required_fields(required_fields, event)
+    for key in required_fields:
+        description = subscription_schema["fields"][key]
+        if description["type"] == "boolean":
+            _validate_boolean(key, event[key], description)
+        elif description["type"] == "number":
+            _validate_number(key, event[key], description)
+        elif description["type"] == "string":
+            _validate_string(key, event[key], description)
+        elif description["type"] == "enum":
+            _validate_enum(key, event[key], description)
 
 
 def schema_digests(subscription_schema):
@@ -153,8 +228,26 @@ def subscription_digests(subscription_schema, subscription):
 
 
 def event_digests(subscription_schema, event):
-    raise NotImplementedError()  # TODO implement
+    """Returns the topic digest for a given event."""
+    schema = subscription_schema
+    validate_event(schema, event)
+    indexes = [schema["fields"].keys()]
+    indexes.extend(schema["indexes"])
+    return set(map(lambda idx: index_digest(schema, event, idx), indexes))
+
+
+def index_digest(subscription_schema, event, index):
+    data = {"fields": {}}
+    for header in ["application", "title", "uuid"]:
+        data[header] = subscription_schema[header]
+    for field in index:
+        data["fields"][field] = event[field]
+        # TODO number conversion
+    h = hashlib.sha256()
+    h.update(json.dumps(data, sort_keys=True))
+    return h.hexdigest()
 
 
 if __name__ == "__main__":
     validate_subscription_schema(EXAMPLE_SUBSCRIPTION_SCHEMA)
+    print event_digests(EXAMPLE_SUBSCRIPTION_SCHEMA, EXAMPLE_EVENT)
