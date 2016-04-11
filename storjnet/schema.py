@@ -101,7 +101,7 @@ SUBSCRIPTION_SCHEMA_FORMAT = {
 }
 
 
-EXAMPLE_SUBSCRIPTION_SCHEMA = {
+EXAMPLE_SCHEMA = {
     "application": "Test Application",
     "title": "Test Schema",
     "uuid": "test",
@@ -134,22 +134,22 @@ EXAMPLE_EVENT = {
 }
 
 
-def validate_subscription_schema(subscription_schema):
+def validate_schema(schema):
     """ Validate subscription schema.
 
     Raises: jsonschema.exceptions.ValidationError: If schema is not valid.
     """
-    jsonschema.validate(subscription_schema, SUBSCRIPTION_SCHEMA_FORMAT)
-    for index in subscription_schema["indexes"]:
+    jsonschema.validate(schema, SUBSCRIPTION_SCHEMA_FORMAT)
+    for index in schema["indexes"]:
         for index_field in index:
-            if index_field not in subscription_schema["fields"]:
+            if index_field not in schema["fields"]:
                 raise jsonschema.exceptions.ValidationError(
                     "Index field '{0}' not in fields!".format(index_field)
                 )
     # TODO check number min <= max
 
 
-def validate_subscription(subscription_schema, subscription):
+def validate_subscription(schema, subscription):
     raise NotImplementedError()  # TODO implement
 
 
@@ -200,15 +200,15 @@ def _validate_number(key, value, description):
         )
 
 
-def validate_event(subscription_schema, event):
+def validate_event(schema, event):
     """Validate event is for a given subscription schema."""
-    validate_subscription_schema(subscription_schema)
+    validate_schema(schema)
     if not isinstance(event, dict):
         raise jsonschema.exceptions.ValidationError("Event must be a dict.")
-    required_fields = set(subscription_schema["fields"].keys())
+    required_fields = set(schema["fields"].keys())
     _validate_required_fields(required_fields, event)
     for key in required_fields:
-        description = subscription_schema["fields"][key]
+        description = schema["fields"][key]
         if description["type"] == "boolean":
             _validate_boolean(key, event[key], description)
         elif description["type"] == "number":
@@ -219,27 +219,27 @@ def validate_event(subscription_schema, event):
             _validate_enum(key, event[key], description)
 
 
-def schema_digests(subscription_schema):
+def schema_digests(schema):
     raise NotImplementedError()  # TODO implement
 
 
-def subscription_digests(subscription_schema, subscription):
+def subscription_digests(schema, subscription):
     raise NotImplementedError()  # TODO implement
 
 
-def event_digests(subscription_schema, event):
+def event_digests(schema, event):
     """Returns the topic digest for a given event."""
-    schema = subscription_schema
+    schema = schema
     validate_event(schema, event)
     indexes = [schema["fields"].keys()]
     indexes.extend(schema["indexes"])
     return set(map(lambda idx: index_digest(schema, event, idx), indexes))
 
 
-def index_digest(subscription_schema, event, index):
+def index_digest(schema, event, index):
     data = {"fields": {}}
     for header in ["application", "title", "uuid"]:
-        data[header] = subscription_schema[header]
+        data[header] = schema[header]
     for field in index:
         data["fields"][field] = event[field]
         # TODO number conversion
@@ -249,5 +249,5 @@ def index_digest(subscription_schema, event, index):
 
 
 if __name__ == "__main__":
-    validate_subscription_schema(EXAMPLE_SUBSCRIPTION_SCHEMA)
-    print event_digests(EXAMPLE_SUBSCRIPTION_SCHEMA, EXAMPLE_EVENT)
+    validate_schema(EXAMPLE_SCHEMA)
+    print event_digests(EXAMPLE_SCHEMA, EXAMPLE_EVENT)
