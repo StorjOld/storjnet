@@ -70,12 +70,11 @@ SUBSCRIPTION_SCHEMA_FORMAT = {
 
         "indexes": {
             "type": "array",
+            "minItems": 1,
             "items": {
                 "type": "array",
                 "minItems": 1,
-                "items": {
-                    "type": "string"
-                }
+                "items": {"type": "string"}
             }
         },
 
@@ -100,48 +99,19 @@ SUBSCRIPTION_SCHEMA_FORMAT = {
 }
 
 
-EXAMPLE_SCHEMA = {
-    "application": "Test Application",
-    "title": "Test Schema",
-    "uuid": "test",
-    "fields": {
-        "foo": {"type": "boolean"},
-        "bar": {
-            "type": "number",
-            "minimum": -1.0,
-            "maximum": 3.0,
-            "resolution": 4
-        },
-        "baz": {"type": "object"},
-        "bam": {
-            "type": "enum",
-            "choices": [None, 1, 3.14, "example"]
-        },
-    },
-    "indexes": [
-        ["foo", "bar", "bam"],
-        ["foo", "bar"]
-    ]
-}
-
-
-EXAMPLE_EVENT = {
-    "foo": True,
-    "bar": 2.99,
-    "baz": {"some": "object"},
-    "bam": None
-}
-
-
-def _number_to_resolution_index(number, minimum, maximum, resolution):
+def _number_conversion(number, minimum, maximum, resolution):
     frame_size = (maximum - minimum) / resolution
     return int((number - minimum) / frame_size)
 
 
 def validate_schema(schema):
-    """ Validate subscription schema.
+    """ Validate schema
 
-    Raises: jsonschema.exceptions.ValidationError: If schema is not valid.
+    Args:
+        schema: The schema to validate.
+
+    Raises:
+        jsonschema.exceptions.ValidationError: If input is not valid.
     """
     jsonschema.validate(schema, SUBSCRIPTION_SCHEMA_FORMAT)
     for index in schema["indexes"]:
@@ -154,6 +124,15 @@ def validate_schema(schema):
 
 
 def validate_subscription(schema, subscription):
+    """ Validate subscription for given schema.
+
+    Args:
+        schema: Schema to which the subscription belongs.
+        subscription: The subscription to validate.
+
+    Raises:
+        jsonschema.exceptions.ValidationError: If input is not valid.
+    """
     raise NotImplementedError()  # TODO implement
 
 
@@ -209,7 +188,15 @@ def _validate_number(key, value, description):
 
 
 def validate_event(schema, event):
-    """Validate event is for a given subscription schema."""
+    """ Validate event for given schema.
+
+    Args:
+        schema: Schema to which the event belongs.
+        event: The event to validate.
+
+    Raises:
+        jsonschema.exceptions.ValidationError: If input is not valid.
+    """
     validate_schema(schema)
     if not isinstance(event, dict):
         raise jsonschema.exceptions.ValidationError("Event must be a dict.")
@@ -228,39 +215,133 @@ def validate_event(schema, event):
 
 
 def schema_digests(schema):
+    """Get all possible topic digests for given content schema.
+
+    Args:
+        schema: Content schema to get topic digests for.
+
+    Returns:
+        List of all possible topic digests.
+
+    Raises:
+        TypeError if index on object field (possible values cannot be deduced).
+    """
+    validate_schema(schema)
     raise NotImplementedError()  # TODO implement
 
 
-def subscription_digests(schema, subscription):
+def subscription_digests(schema, subscription, indexes=None):
+    """Get topic digests for a given schema subscription.
+
+    Args:
+        schema: Schema the given subscription belongs to.
+        subscription: Subscription to get digests of.
+        indexes: Limit to given list of indexes, otherwise all indexes.
+
+    Returns:
+        List of the topic digests.
+    """
+    validate_schema(schema)
+    indexes = range(len(schema["indexes"])) if indexes is None else indexes
+    _validate_indexes(schema, indexes)
     raise NotImplementedError()  # TODO implement
 
 
-def event_digests(schema, event):
-    """Returns the topic digest for a given event."""
+def _validate_indexes(schema, indexes):
+    if not isinstance(indexes, list):
+        raise jsonschema.exceptions.ValidationError("Indexes must be a list.")
+    maximum = len(schema["indexes"])
+    for index in indexes:
+        try:
+            number = Decimal(index)
+        except InvalidOperation:
+            raise jsonschema.exceptions.ValidationError(
+                "Index value {0} not a number.".format(index)
+            )
+        if not (0 <= number < maximum):
+            raise jsonschema.exceptions.ValidationError(
+                "Index value {0} not in limits: {1} <= {0} < {2}.".format(
+                    number, 0, maximum
+                )
+            )
+
+
+def event_digests(schema, event, indexes=None):
+    """Get topic digests for a given schema event.
+
+    Args:
+        schema: Schema the given event belongs to.
+        event: Event to get digests of.
+        indexes: Limit to given list of indexes, otherwise all indexes.
+
+    Returns:
+        List of the topic digests.
+    """
     validate_event(schema, event)
-    indexes = schema["indexes"]
-    return list(set(map(lambda idx: index_digest(schema, event, idx), indexes)))
+    indexes = range(len(schema["indexes"])) if indexes is None else indexes
+    _validate_indexes(schema, indexes)
+    return list(set(map(lambda i: _index_digest(schema, event, i), indexes)))
 
 
-def index_digest(schema, event, index):
+def _index_digest(schema, event, index):
     data = {"fields": {}}
     for header in ["application", "title", "uuid"]:
         data[header] = schema[header]
-    for field in index:
+    for field in schema["indexes"][index]:
         if schema["fields"][field]["type"] == "number":
-            minimum = schema["fields"][field]["minimum"]
-            maximum = schema["fields"][field]["maximum"]
-            resolution = schema["fields"][field]["resolution"]
-            data["fields"][field] = _number_to_resolution_index(
-                Decimal(event[field]), Decimal(minimum),
-                Decimal(maximum), Decimal(resolution)
-            )
+            minimum = Decimal(schema["fields"][field]["minimum"])
+            maximum = Decimal(schema["fields"][field]["maximum"])
+            resolution = Decimal(schema["fields"][field]["resolution"])
+            number = Decimal(event[field])
+            data["fields"][field] = _number_conversion(number, minimum,
+                                                       maximum, resolution)
         else:
             data["fields"][field] = event[field]
     json_data = json.dumps(data, sort_keys=True)
     h = hashlib.sha256()
     h.update(json_data)
     return h.hexdigest()
+
+
+EXAMPLE_SCHEMA = {
+    "application": "Test Application",
+    "title": "Test Schema",
+    "uuid": "test",  # FIXME make more strict
+    "fields": {
+        "foo": {"type": "boolean"},
+        "bar": {
+            "type": "number",
+            "minimum": -1.0,
+            "maximum": 3.0,
+            "resolution": 4
+        },
+        "baz": {"type": "object"},
+        "bam": {
+            "type": "enum",
+            "choices": [None, 1, 3.14, "example"]
+        },
+    },
+    "indexes": [
+        ["foo", "bar", "bam"],
+        ["foo", "bar"]
+    ]
+}
+
+
+EXAMPLE_SUBSCRIPTION = {
+    "foo": [],
+    "bar": [],
+    "baz": [],
+    "bam": [],
+}
+
+
+EXAMPLE_EVENT = {
+    "foo": True,
+    "bar": 2.99,
+    "baz": {"some": "object"},
+    "bam": None
+}
 
 
 if __name__ == "__main__":
