@@ -120,20 +120,106 @@ def validate_schema(schema):
                 raise jsonschema.exceptions.ValidationError(
                     "Index field '{0}' not in fields!".format(index_field)
                 )
-    # TODO check number min <= max
+    # FIXME check number min <= max
 
 
-def validate_subscription(schema, subscription):
+def _validate_subscription_boolean(key, value, description):
+    if not isinstance(value, list):
+        raise jsonschema.exceptions.ValidationError(
+            "{0} value not a list.".format(key)
+        )
+    for choice in value:
+        if not isinstance(choice, bool):
+            raise jsonschema.exceptions.ValidationError(
+                "{0} value {1} not a boolean.".format(key, value)
+            )
+
+
+def _validate_subscription_number(key, value, description):
+    if not isinstance(value, list):
+        raise jsonschema.exceptions.ValidationError(
+            "{0} value not a list.".format(key)
+        )
+    if len(value) != 2:
+        raise jsonschema.exceptions.ValidationError(
+            "{0} value {1} does not have two entries.".format(key, value)
+        )
+    try:
+        lower = Decimal(value[0])
+        upper = Decimal(value[1])
+    except InvalidOperation:
+        raise jsonschema.exceptions.ValidationError(
+            "{0} values {1} not numbers.".format(key, value)
+        )
+    minimum = Decimal(description["minimum"])
+    maximum = Decimal(description["maximum"])
+    if not (minimum <= lower <= upper < maximum):  # maximum is exclusive
+        raise jsonschema.exceptions.ValidationError(
+            "{0} values {1} not in limits: {2} <= {4} <= {5} < {3}.".format(
+                key, value, minimum, maximum, lower, upper
+            )
+        )
+
+
+def _validate_subscription_object(key, value, description):
+    try:
+        json.dumps(value)
+    except TypeError:
+        raise jsonschema.exceptions.ValidationError(
+            "{0} value {1} not an object.".format(key, value)
+        )
+
+
+def _validate_subscription_enum(key, value, description):
+    if not isinstance(value, list):
+        raise jsonschema.exceptions.ValidationError(
+            "{0} value not a list.".format(key)
+        )
+    choices = description["choices"]
+    for choice in value:
+        if choice not in choices:
+            raise jsonschema.exceptions.ValidationError(
+                "{0} value {1} not in valid choices {2}.".format(
+                    key, value, choices
+                )
+            )
+
+
+def _validate_subscription_field(schema, key, value):
+    description = schema["fields"][key]
+    if description["type"] == "boolean":
+        _validate_subscription_boolean(key, value, description)
+    elif description["type"] == "number":
+        _validate_subscription_number(key, value, description)
+    elif description["type"] == "object":
+        _validate_subscription_object(key, value, description)
+    elif description["type"] == "enum":
+        _validate_subscription_enum(key, value, description)
+
+
+def validate_subscription(schema, subscription, indexes=None):
     """ Validate subscription for given schema.
 
     Args:
         schema: Schema to which the subscription belongs.
         subscription: The subscription to validate.
+        indexes: Limit to given list of indexes, otherwise all indexes.
 
     Raises:
         jsonschema.exceptions.ValidationError: If input is not valid.
     """
-    raise NotImplementedError()  # TODO implement
+    validate_schema(schema)
+    indexes = range(len(schema["indexes"])) if indexes is None else indexes
+    _validate_indexes(schema, indexes)
+    for index in indexes:
+        for key in schema["indexes"][index]:
+            try:
+                value = subscription[key]
+                _validate_subscription_field(schema, key, value)
+            except KeyError:
+                raise jsonschema.exceptions.ValidationError(
+                    "Subscription missing required field {0}!".format(key)
+                )
 
 
 def _validate_required_fields(required_fields, event):
@@ -145,14 +231,14 @@ def _validate_required_fields(required_fields, event):
         )
 
 
-def _validate_boolean(key, value, description):
+def _validate_event_boolean(key, value, description):
     if not isinstance(value, bool):
         raise jsonschema.exceptions.ValidationError(
             "{0} value {1} not a boolean.".format(key, value)
         )
 
 
-def _validate_object(key, value, description):
+def _validate_event_object(key, value, description):
     try:
         json.dumps(value)
     except TypeError:
@@ -161,7 +247,7 @@ def _validate_object(key, value, description):
         )
 
 
-def _validate_enum(key, value, description):
+def _validate_event_enum(key, value, description):
     if value not in description["choices"]:
         raise jsonschema.exceptions.ValidationError(
             "{0} value {1} not in allowed choices {2}".format(
@@ -170,7 +256,7 @@ def _validate_enum(key, value, description):
         )
 
 
-def _validate_number(key, value, description):
+def _validate_event_number(key, value, description):
     try:
         number = Decimal(value)
     except InvalidOperation:
@@ -205,41 +291,27 @@ def validate_event(schema, event):
     for key in required_fields:
         description = schema["fields"][key]
         if description["type"] == "boolean":
-            _validate_boolean(key, event[key], description)
+            _validate_event_boolean(key, event[key], description)
         elif description["type"] == "number":
-            _validate_number(key, event[key], description)
+            _validate_event_number(key, event[key], description)
         elif description["type"] == "object":
-            _validate_object(key, event[key], description)
+            _validate_event_object(key, event[key], description)
         elif description["type"] == "enum":
-            _validate_enum(key, event[key], description)
+            _validate_event_enum(key, event[key], description)
 
 
-def schema_digests(schema):
+def schema_digests(schema, indexes=None):
     """Get all possible topic digests for given content schema.
 
     Args:
         schema: Content schema to get topic digests for.
+        indexes: Limit to given list of indexes, otherwise all indexes.
 
     Returns:
         List of all possible topic digests.
 
     Raises:
         TypeError if index on object field (possible values cannot be deduced).
-    """
-    validate_schema(schema)
-    raise NotImplementedError()  # TODO implement
-
-
-def subscription_digests(schema, subscription, indexes=None):
-    """Get topic digests for a given schema subscription.
-
-    Args:
-        schema: Schema the given subscription belongs to.
-        subscription: Subscription to get digests of.
-        indexes: Limit to given list of indexes, otherwise all indexes.
-
-    Returns:
-        List of the topic digests.
     """
     validate_schema(schema)
     indexes = range(len(schema["indexes"])) if indexes is None else indexes
@@ -264,6 +336,22 @@ def _validate_indexes(schema, indexes):
                     number, 0, maximum
                 )
             )
+
+
+def subscription_digests(schema, subscription, indexes=None):
+    """Get topic digests for a given schema subscription.
+
+    Args:
+        schema: Schema the given subscription belongs to.
+        subscription: Subscription to get digests of.
+        indexes: Limit to given list of indexes, otherwise all indexes.
+
+    Returns:
+        List of the topic digests.
+    """
+    validate_subscription(schema, subscription, indexes=indexes)
+    indexes = range(len(schema["indexes"])) if indexes is None else indexes
+    return "NOT IMPLEMENTED"
 
 
 def event_digests(schema, event, indexes=None):
@@ -308,42 +396,59 @@ EXAMPLE_SCHEMA = {
     "title": "Test Schema",
     "uuid": "test",  # FIXME make more strict
     "fields": {
-        "foo": {"type": "boolean"},
-        "bar": {
+        "sell": {"type": "boolean"},
+        "price": {
             "type": "number",
-            "minimum": -1.0,
-            "maximum": 3.0,
+            "minimum": 0.0,
+            "maximum": 100.0,
+            "resolution": 8
+        },
+        "amount": {
+            "type": "number",
+            "minimum": 1.0,
+            "maximum": 100.0,
             "resolution": 4
         },
-        "baz": {"type": "object"},
-        "bam": {
+        "metadata": {"type": "object"},
+        "category": {
             "type": "enum",
             "choices": [None, 1, 3.14, "example"]
         },
     },
     "indexes": [
-        ["foo", "bar", "bam"],
-        ["foo", "bar"]
+        ["sell", "price"],
+        ["sell", "price", "amount", "category"],
     ]
 }
 
 
-EXAMPLE_SUBSCRIPTION = {
-    "foo": [],
-    "bar": [],
-    "baz": [],
-    "bam": [],
+EXAMPLE_SUBSCRIPTION_NARROW = {
+    "sell": [True],  # list of choices
+    "price": [0.0, 10.0],  # range subscription
+}
+
+
+EXAMPLE_SUBSCRIPTION_BROAD = {
+    "sell": [True, False],  # list of choices
+    "price": [1.0, 99.0],  # range subscription
+    "amount": [1.0, 99.0],  # range subscription
+    "category": [None, "example"],  # list of choies
 }
 
 
 EXAMPLE_EVENT = {
-    "foo": True,
-    "bar": 2.99,
-    "baz": {"some": "object"},
-    "bam": None
+    "sell": True,
+    "price": 2.99,
+    "amount": 5,
+    "metadata": {"some": "object"},
+    "category": None
 }
 
 
 if __name__ == "__main__":
     validate_schema(EXAMPLE_SCHEMA)
     print event_digests(EXAMPLE_SCHEMA, EXAMPLE_EVENT)
+    print subscription_digests(EXAMPLE_SCHEMA, EXAMPLE_SUBSCRIPTION_BROAD)
+    print subscription_digests(
+        EXAMPLE_SCHEMA, EXAMPLE_SUBSCRIPTION_NARROW, indexes=[0]
+    )
