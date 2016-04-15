@@ -376,7 +376,8 @@ def _possible_subscription_values(schema, subscription, index):
 
 
 def _subscription_index_digests(schema, subscription, index):
-    possible_values = _possible_subscription_values(schema, subscription, index)
+    possible_values = _possible_subscription_values(schema, subscription,
+                                                    index)
     print possible_values
     digests = []
     # TODO get digests
@@ -398,7 +399,8 @@ def subscription_digests(schema, subscription, indexes=None):
     indexes = range(len(schema["indexes"])) if indexes is None else indexes
     digests = []
     for index in indexes:
-        digests.extend(_subscription_index_digests(schema, subscription, index))
+        digests.extend(_subscription_index_digests(schema, subscription,
+                                                   index))
     return list(set(digests))
 
 
