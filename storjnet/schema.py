@@ -99,7 +99,12 @@ SUBSCRIPTION_SCHEMA_FORMAT = {
 }
 
 
-def _number_conversion(number, minimum, maximum, resolution):
+def _num_denormalize(normal, minimum, maximum, resolution):
+    frame_size = (maximum - minimum) / resolution
+    return normal * frame_size + minimum
+
+
+def _num_normalize(number, minimum, maximum, resolution):
     frame_size = (maximum - minimum) / resolution
     return int((number - minimum) / frame_size)
 
@@ -338,6 +343,46 @@ def _validate_indexes(schema, indexes):
             )
 
 
+def _possible_number_values(minimum, maximum, resolution, lower, upper):
+    lower_conversion = _num_normalize(lower, minimum, maximum, resolution)
+    upper_conversion = _num_normalize(upper, minimum, maximum, resolution)
+    normal_values = [lower_conversion, upper_conversion]
+    normal_values.extend(range(lower_conversion + 1, upper_conversion))
+    values = []
+    for normal in sorted(normal_values):
+        values.append(_num_denormalize(normal, minimum, maximum, resolution))
+    return list(set(values))
+
+
+def _possible_subscription_values(schema, subscription, index):
+    possible_values = {}
+    for key in schema["indexes"][index]:
+        description = schema["fields"][key]
+        if description["type"] == "boolean":
+            possible_values[key] = subscription[key]
+        if description["type"] == "enum":
+            possible_values[key] = subscription[key]
+        elif description["type"] == "object":
+            possible_values[key] = [subscription[key]]
+        elif description["type"] == "number":
+            possible_values[key] = _possible_number_values(
+                Decimal(description["minimum"]),
+                Decimal(description["maximum"]),
+                Decimal(description["resolution"]),
+                Decimal(subscription[key][0]),
+                Decimal(subscription[key][1])
+            )
+    return possible_values
+
+
+def _subscription_index_digests(schema, subscription, index):
+    possible_values = _possible_subscription_values(schema, subscription, index)
+    print possible_values
+    digests = []
+    # TODO get digests
+    return digests
+
+
 def subscription_digests(schema, subscription, indexes=None):
     """Get topic digests for a given schema subscription.
 
@@ -351,7 +396,10 @@ def subscription_digests(schema, subscription, indexes=None):
     """
     validate_subscription(schema, subscription, indexes=indexes)
     indexes = range(len(schema["indexes"])) if indexes is None else indexes
-    return "NOT IMPLEMENTED"
+    digests = []
+    for index in indexes:
+        digests.extend(_subscription_index_digests(schema, subscription, index))
+    return list(set(digests))
 
 
 def event_digests(schema, event, indexes=None):
@@ -375,16 +423,16 @@ def _index_digest(schema, event, index):
     data = {"fields": {}}
     for header in ["application", "title", "uuid"]:
         data[header] = schema[header]
-    for field in schema["indexes"][index]:
-        if schema["fields"][field]["type"] == "number":
-            minimum = Decimal(schema["fields"][field]["minimum"])
-            maximum = Decimal(schema["fields"][field]["maximum"])
-            resolution = Decimal(schema["fields"][field]["resolution"])
-            number = Decimal(event[field])
-            data["fields"][field] = _number_conversion(number, minimum,
-                                                       maximum, resolution)
+    for key in schema["indexes"][index]:
+        if schema["fields"][key]["type"] == "number":
+            minimum = Decimal(schema["fields"][key]["minimum"])
+            maximum = Decimal(schema["fields"][key]["maximum"])
+            resolution = Decimal(schema["fields"][key]["resolution"])
+            number = Decimal(event[key])
+            data["fields"][key] = _num_normalize(number, minimum,
+                                                 maximum, resolution)
         else:
-            data["fields"][field] = event[field]
+            data["fields"][key] = event[key]
     json_data = json.dumps(data, sort_keys=True)
     h = hashlib.sha256()
     h.update(json_data)
